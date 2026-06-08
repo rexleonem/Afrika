@@ -1,0 +1,19 @@
+{
+  "name": "ai",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fastify": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,12 @@
+node_modules
+.expo
+.next
+dist
+build
+coverage
+.turbo
+.DS_Store
+.env
+.env.local
+prisma/dev.db
+*.log

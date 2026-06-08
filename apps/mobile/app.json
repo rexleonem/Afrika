@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "AFRIKA",
+    "slug": "afrika",
+    "scheme": "afrika",
+    "plugins": ["expo-router"],
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    }
+  }
+}
