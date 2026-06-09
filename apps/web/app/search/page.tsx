@@ -3,6 +3,7 @@ import { interpretSearch } from "@afrika/shared/stage2";
 import { buildCityIntelligence, inferBehavioralProfile, predictDiscovery } from "@afrika/shared/stage3";
 import { buildHumanIntelligenceLayer, generateCulturalStories } from "@afrika/shared/stage4";
 import { buildActionLayer } from "@afrika/shared/stage5";
+import { buildAmbientIntelligence } from "@afrika/shared/stage6";
 
 export default function SearchPage() {
   const query = interpretSearch("quiet places to work in Lagos");
@@ -15,6 +16,7 @@ export default function SearchPage() {
   const leadingCity = cityIntelligence.find((city) => city.city === "Lagos");
   const culturalStories = generateCulturalStories(featuredCards, []);
   const actionLayer = buildActionLayer(featuredCards);
+  const ambientIntelligence = buildAmbientIntelligence(featuredCards, "2026-06-09T19:00:00.000Z");
 
   return (
     <main className="min-h-screen px-6 py-8 md:px-10">
@@ -34,6 +36,24 @@ export default function SearchPage() {
             <div className="text-xs uppercase tracking-[0.35em] text-white/45">Ranking hint</div>
             <p className="mt-3 text-xl font-medium">{query.rankingHint}</p>
             <p className="mt-2 text-sm text-white/60">Hybrid search combines semantics, geo relevance, and keywords.</p>
+          </article>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-3">
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Ambient cue</div>
+            <p className="mt-3 text-xl font-medium">{ambientIntelligence.suggestions[0]?.title}</p>
+            <p className="mt-2 text-sm text-white/60">{ambientIntelligence.suggestions[0]?.reason}</p>
+          </article>
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Temporal layer</div>
+            <p className="mt-3 text-xl font-medium">{ambientIntelligence.temporalSignals[0]?.label}</p>
+            <p className="mt-2 text-sm text-white/60">{ambientIntelligence.temporalSignals[0]?.recommendation}</p>
+          </article>
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Adaptive mode</div>
+            <p className="mt-3 text-xl font-medium capitalize">{ambientIntelligence.adaptiveInterface.mode.replace("-", " ")}</p>
+            <p className="mt-2 text-sm text-white/60">{ambientIntelligence.adaptiveInterface.tone}</p>
           </article>
         </section>
 

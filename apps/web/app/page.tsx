@@ -5,6 +5,7 @@ import { freshnessStatus, interpretSearch, scoreCardTotal } from "@afrika/shared
 import { buildCityIntelligence, buildContentGraph, inferBehavioralProfile, predictDiscovery } from "@afrika/shared/stage3";
 import { buildContributorNetwork, generateCulturalStories, buildHumanIntelligenceLayer } from "@afrika/shared/stage4";
 import { buildActionLayer } from "@afrika/shared/stage5";
+import { buildAmbientIntelligence, buildPersonalOperatingSystem } from "@afrika/shared/stage6";
 import { motion } from "framer-motion";
 
 export default function HomePage() {
@@ -30,6 +31,8 @@ export default function HomePage() {
   ]);
   const culturalStories = generateCulturalStories(featuredCards, []);
   const actionLayer = buildActionLayer(featuredCards);
+  const ambientIntelligence = buildAmbientIntelligence(featuredCards, "2026-06-09T19:00:00.000Z");
+  const personalOS = buildPersonalOperatingSystem(featuredCards, "2026-06-09T19:00:00.000Z");
 
   const feedHighlights = featuredCards.map((card) => ({
     ...card,
@@ -146,6 +149,37 @@ export default function HomePage() {
               <div className="text-xs uppercase tracking-[0.35em] text-white/45">Fulfillment trust</div>
               <div className="mt-3 text-2xl font-semibold">{actionLayer.analytics.reservationSuccessRate}</div>
               <p className="mt-2 text-sm text-white/60">Invisible booking and planning flows stay calm and reliable.</p>
+            </div>
+          </section>
+
+          <section className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Ambient mode</div>
+              <div className="mt-3 text-2xl font-semibold capitalize">{ambientIntelligence.adaptiveInterface.mode.replace("-", " ")}</div>
+              <p className="mt-2 text-sm text-white/60">{ambientIntelligence.adaptiveInterface.tone}</p>
+            </div>
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">City pulse</div>
+              <div className="mt-3 text-2xl font-semibold">{ambientIntelligence.cityPulse[0]?.city ?? "Lagos"}</div>
+              <p className="mt-2 text-sm text-white/60">{ambientIntelligence.cityPulse[0]?.bestWindow}</p>
+            </div>
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Personal OS</div>
+              <div className="mt-3 text-2xl font-semibold">{personalOS.routines.length}</div>
+              <p className="mt-2 text-sm text-white/60">Ambient routines adapt around movement, timing, and context.</p>
+            </div>
+          </section>
+
+          <section className="rounded-[32px] border border-white/10 bg-white/5 p-6">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Ambient suggestions</div>
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              {ambientIntelligence.suggestions.map((item) => (
+                <div key={`${item.city}-${item.title}`} className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                  <div className="text-xs uppercase tracking-[0.3em] text-white/45">{item.city}</div>
+                  <p className="mt-2 text-sm text-white/75">{item.title}</p>
+                  <p className="mt-2 text-xs text-white/55">{item.reason}</p>
+                </div>
+              ))}
             </div>
           </section>
 

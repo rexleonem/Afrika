@@ -24,6 +24,13 @@ import {
   buildSmartActions,
   detectIntent
 } from "@afrika/shared/stage5";
+import {
+  buildAmbientIntelligence,
+  buildContinentalIntelligence,
+  buildCrossDomainIntelligenceGraph,
+  buildPersonalOperatingSystem,
+  buildTemporalIntelligence
+} from "@afrika/shared/stage6";
 import { freshnessStatus, scoreCardTotal, type RecommendationEdge, type TrendSignal } from "@afrika/shared/stage2";
 
 const cards = featuredCards.map((card) => {
@@ -146,6 +153,13 @@ const actionAnalytics = buildActionAnalytics([
   { type: "recommendation", completed: true }
 ]);
 
+const stage6Timestamp = "2026-06-09T19:00:00.000Z";
+const ambientIntelligence = buildAmbientIntelligence(cards, stage6Timestamp);
+const temporalIntelligence = buildTemporalIntelligence(cards, stage6Timestamp);
+const crossDomainGraph = buildCrossDomainIntelligenceGraph(cards, stage6Timestamp);
+const personalOperatingSystem = buildPersonalOperatingSystem(cards, stage6Timestamp);
+const continentalIntelligence = buildContinentalIntelligence();
+
 const trendSignals: TrendSignal[] = [
   { locationKey: "lagos-lekki", metric: "search_frequency", score: 0.88, label: "Fast-rising in Lagos" },
   { locationKey: "nairobi-kilimani", metric: "save_velocity", score: 0.81, label: "High save velocity" }
@@ -183,5 +197,10 @@ export const store = {
   inquiries,
   movementPlans,
   opportunityApplications,
-  actionAnalytics
+  actionAnalytics,
+  ambientIntelligence,
+  temporalIntelligence,
+  crossDomainGraph,
+  personalOperatingSystem,
+  continentalIntelligence
 };

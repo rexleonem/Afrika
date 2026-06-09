@@ -1,5 +1,6 @@
 import { featuredCards } from "@afrika/shared/content";
 import { buildActionAnalytics, buildActionLayer, buildMovementPlan } from "@afrika/shared/stage5";
+import { buildAmbientIntelligence } from "@afrika/shared/stage6";
 
 const actionLayer = buildActionLayer(featuredCards);
 const movementPlans = [
@@ -12,6 +13,7 @@ const fulfillment = buildActionAnalytics([
   { type: "plan", completed: true },
   { type: "application", completed: false }
 ]);
+const ambient = buildAmbientIntelligence(featuredCards, "2026-06-09T19:00:00.000Z");
 
 export default function PlansPage() {
   return (
@@ -37,6 +39,19 @@ export default function PlansPage() {
             <div className="text-xs uppercase tracking-[0.35em] text-white/45">Recommended action</div>
             <p className="mt-3 text-xl font-medium">{actionLayer.actions[0]?.label}</p>
             <p className="mt-2 text-sm text-white/60">{actionLayer.actions[0]?.description}</p>
+          </article>
+        </section>
+
+        <section className="mt-6 grid gap-4 md:grid-cols-2">
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Best window</div>
+            <p className="mt-3 text-xl font-medium">{ambient.cityPulse[0]?.bestWindow}</p>
+            <p className="mt-2 text-sm text-white/60">{ambient.temporalSignals[0]?.recommendation}</p>
+          </article>
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Environment fit</div>
+            <p className="mt-3 text-xl font-medium capitalize">{ambient.adaptiveInterface.mode.replace("-", " ")}</p>
+            <p className="mt-2 text-sm text-white/60">{ambient.environmentalSignals[0]?.weather} weather and {ambient.environmentalSignals[0]?.traffic} traffic.</p>
           </article>
         </section>
 

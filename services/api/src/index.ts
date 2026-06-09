@@ -146,6 +146,31 @@ app.get("/fulfillment", async () => ({
   summary: "Trust and fulfillment intelligence for action outcomes."
 }));
 
+app.get("/ambient", async () => ({
+  ambient: store.ambientIntelligence,
+  summary: "Ambient suggestions, temporal patterns, and environment-aware signals."
+}));
+
+app.get("/temporal", async () => ({
+  items: store.temporalIntelligence,
+  summary: "Temporal rhythm intelligence for African city life."
+}));
+
+app.get("/orchestration", async () => ({
+  personalOS: store.personalOperatingSystem,
+  summary: "Cross-context orchestration for adaptive discovery and movement."
+}));
+
+app.get("/cross-domain", async () => ({
+  graph: store.crossDomainGraph,
+  summary: "Unified graph linking places, people, time, movement, and environment."
+}));
+
+app.get("/continent", async () => ({
+  items: store.continentalIntelligence,
+  summary: "Continental intelligence layers for regional rhythm and cultural patterns."
+}));
+
 app.get("/freshness", async () => ({
   items: store.cards.map((card) => ({
     id: card.id,
@@ -184,6 +209,7 @@ app.get("/admin/overview", async () => {
     culturalStories: store.culturalStories.length,
     actionSignals: store.smartActions.length,
     opportunityApplications: store.opportunityApplications.length,
+    ambientSuggestions: store.ambientIntelligence.suggestions.length,
     qualityPreview: qualityPreview.total
   };
 });
@@ -210,7 +236,8 @@ app.get("/admin/monitoring", async () => ({
   verification: store.verificationQueue.length,
   actionAnalytics: store.actionAnalytics,
   actionSignals: store.smartActions.length,
-  opportunityApplications: store.opportunityApplications.length
+  opportunityApplications: store.opportunityApplications.length,
+  ambientMode: store.ambientIntelligence.adaptiveInterface.mode
 }));
 
 const port = Number(process.env.PORT ?? 4000);

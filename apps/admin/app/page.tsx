@@ -7,6 +7,7 @@ import {
   structureHumanContribution
 } from "@afrika/shared/stage4";
 import { buildActionAnalytics, buildActionLayer } from "@afrika/shared/stage5";
+import { buildAmbientIntelligence, buildContinentalIntelligence, buildPersonalOperatingSystem } from "@afrika/shared/stage6";
 
 const contributorSeed = [
   {
@@ -74,6 +75,9 @@ const actionAnalytics = buildActionAnalytics([
   { type: "application", completed: false },
   { type: "recommendation", completed: true }
 ]);
+const ambient = buildAmbientIntelligence(featuredCards, "2026-06-09T19:00:00.000Z");
+const personalOS = buildPersonalOperatingSystem(featuredCards, "2026-06-09T19:00:00.000Z");
+const continental = buildContinentalIntelligence();
 
 export default function AdminPage() {
   return (
@@ -103,6 +107,10 @@ export default function AdminPage() {
           <article className="rounded-[26px] border border-white/10 bg-white/5 p-5">
             <div className="text-sm text-white/55">Human stories</div>
             <div className="mt-3 text-4xl font-semibold">{culturalStories.length}</div>
+          </article>
+          <article className="rounded-[26px] border border-white/10 bg-white/5 p-5">
+            <div className="text-sm text-white/55">Ambient cues</div>
+            <div className="mt-3 text-4xl font-semibold">{ambient.suggestions.length}</div>
           </article>
         </section>
 
@@ -205,6 +213,46 @@ export default function AdminPage() {
               <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">Completed plans: {actionAnalytics.completedPlans}</div>
               <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">Applications: {actionAnalytics.applicationsSubmitted}</div>
               <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">Accepted recommendations: {actionAnalytics.acceptedRecommendations}</div>
+            </div>
+          </article>
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-3">
+          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Live intelligence</div>
+            <div className="mt-4 space-y-3 text-sm text-white/70">
+              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
+                Mode: {ambient.adaptiveInterface.mode.replace("-", " ")}
+              </div>
+              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
+                City pulse: {ambient.cityPulse[0]?.city} - {ambient.cityPulse[0]?.bestWindow}
+              </div>
+              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
+                Weather: {ambient.environmentalSignals[0]?.weather} / traffic {ambient.environmentalSignals[0]?.traffic}
+              </div>
+            </div>
+          </article>
+
+          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Orchestration</div>
+            <div className="mt-4 space-y-3 text-sm text-white/70">
+              {personalOS.routines.map((routine) => (
+                <div key={routine} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
+                  {routine}
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Continental view</div>
+            <div className="mt-4 space-y-3 text-sm text-white/70">
+              {continental.map((region) => (
+                <div key={region.region} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
+                  <div className="font-medium text-white">{region.region}</div>
+                  <div className="mt-1 text-white/60">{region.cityPersonality.join(", ")}</div>
+                </div>
+              ))}
             </div>
           </article>
         </section>

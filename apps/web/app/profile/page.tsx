@@ -1,12 +1,14 @@
 import { featuredCards } from "@afrika/shared/content";
 import { buildActionLayer } from "@afrika/shared/stage5";
 import { inferBehavioralProfile } from "@afrika/shared/stage3";
+import { buildAmbientIntelligence } from "@afrika/shared/stage6";
 
 const actionLayer = buildActionLayer(featuredCards);
 const behavioralProfile = inferBehavioralProfile(featuredCards, [
   { type: "save", cardId: featuredCards[0]?.id, timestamp: "2026-06-09T05:31:00.000Z" },
   { type: "search", query: "weekend plan under budget", timestamp: "2026-06-09T05:32:00.000Z" }
 ]);
+const ambient = buildAmbientIntelligence(featuredCards, "2026-06-09T19:00:00.000Z");
 
 export default function ProfilePage() {
   return (
@@ -40,6 +42,21 @@ export default function ProfilePage() {
           <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
             <h2 className="text-xl font-medium">Action history</h2>
             <p className="mt-2 text-sm text-white/60">Reservations, inquiries, and plan completions will shape recommendations here.</p>
+          </article>
+        </section>
+
+        <section className="mt-6 grid gap-4 md:grid-cols-3">
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <h2 className="text-xl font-medium">Memory layer</h2>
+            <p className="mt-2 text-sm text-white/60">{ambient.memory[0]?.neighborhood ?? "Adaptive memory builds from exploration."}</p>
+          </article>
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <h2 className="text-xl font-medium">Preferred timing</h2>
+            <p className="mt-2 text-sm text-white/60">{ambient.memory[0]?.preferredTiming ?? "Contextual timing"}</p>
+          </article>
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <h2 className="text-xl font-medium">Adaptive mode</h2>
+            <p className="mt-2 text-sm text-white/60 capitalize">{ambient.adaptiveInterface.mode.replace("-", " ")}</p>
           </article>
         </section>
       </div>
