@@ -1,9 +1,25 @@
 "use client";
 
 import { featuredCards } from "@afrika/shared/content";
+import { freshnessStatus, interpretSearch, scoreCardTotal } from "@afrika/shared/stage2";
 import { motion } from "framer-motion";
 
 export default function HomePage() {
+  const feedHighlights = featuredCards.map((card) => ({
+    ...card,
+    quality: scoreCardTotal({
+      usefulness: 0.86,
+      uniqueness: 0.72,
+      freshness: card.freshnessScore,
+      visualQuality: 0.91,
+      sourceTrust: card.trustScore,
+      engagementProbability: 0.66,
+      localRelevance: card.relevanceScore
+    })
+  }));
+
+  const trendQuery = interpretSearch("trending places in Lagos this week");
+
   return (
     <main className="min-h-screen px-6 py-8 md:px-10">
       <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[220px_minmax(0,1fr)_320px]">
@@ -29,8 +45,26 @@ export default function HomePage() {
             </p>
           </header>
 
+          <section className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Trend signal</div>
+              <div className="mt-3 text-2xl font-semibold">Trending in Lagos</div>
+              <p className="mt-2 text-sm text-white/60">{trendQuery.rankingHint}</p>
+            </div>
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Freshness</div>
+              <div className="mt-3 text-2xl font-semibold">{freshnessStatus(feedHighlights[0]?.quality.freshness ?? 0.8)}</div>
+              <p className="mt-2 text-sm text-white/60">Cards decay automatically when they lose confidence.</p>
+            </div>
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Reasoning</div>
+              <div className="mt-3 text-2xl font-semibold">Context-aware</div>
+              <p className="mt-2 text-sm text-white/60">AI adds why-it-matters, comparisons, and nearby discovery.</p>
+            </div>
+          </section>
+
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {featuredCards.map((card, index) => (
+            {feedHighlights.map((card, index) => (
               <motion.article
                 key={card.id}
                 initial={{ opacity: 0, y: 16 }}
@@ -46,6 +80,9 @@ export default function HomePage() {
                   </div>
                   <h2 className="text-2xl font-medium tracking-tight">{card.title}</h2>
                   <p className="text-sm leading-6 text-white/70">{card.intelligence.summary}</p>
+                  <p className="text-xs uppercase tracking-[0.28em] text-white/45">
+                    quality {card.quality.total} · freshness {card.freshnessScore}
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {card.tags.slice(0, 4).map((tag) => (
                       <span key={tag} className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/70">

@@ -21,6 +21,7 @@ model User {
 
 model Card {
   id              String   @id
+  sourceId        String?
   title           String
   locationName    String
   category        String
@@ -30,17 +31,26 @@ model Card {
   whyItMatters    String
   imageUrl        String
   videoUrl        String?
+  sourceUrl       String?
   lat             Float
   lng             Float
   freshnessScore  Float
+  confidenceScore Float   @default(0.75)
   trustScore      Float
   relevanceScore  Float
   decayRate       Float
   lastVerifiedAt  DateTime
+  lastSeenAt      DateTime?
+  qualityScore    Float   @default(0.0)
+  trendScore      Float   @default(0.0)
+  status          String   @default("active")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   saves           Save[]
   embeddings      Embedding[]
+  source          Source?  @relation(fields: [sourceId], references: [id])
+  recommendationFrom RecommendationEdge[] @relation("RecommendationFrom")
+  recommendationTo   RecommendationEdge[] @relation("RecommendationTo")
 }
 
 model Category {
@@ -116,10 +126,84 @@ model Recommendation {
   createdAt DateTime @default(now())
 }
 
+model RecommendationEdge {
+  id         String   @id @default(cuid())
+  fromCardId  String
+  toCardId    String
+  score       Float
+  reason      String
+  createdAt   DateTime @default(now())
+  fromCard    Card     @relation("RecommendationFrom", fields: [fromCardId], references: [id], onDelete: Cascade)
+  toCard      Card     @relation("RecommendationTo", fields: [toCardId], references: [id], onDelete: Cascade)
+}
+
 model UserPreference {
   id              String   @id @default(cuid())
   userId          String   @unique
   preferredCities String[]
   interests       String[]
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Source {
+  id                String   @id @default(cuid())
+  name              String
+  kind              String
+  url               String
+  reliabilityScore  Float    @default(0.7)
+  active            Boolean  @default(true)
+  crawlIntervalMinutes Int   @default(360)
+  lastCrawledAt     DateTime?
+  blockedAt         DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  cards             Card[]
+  crawlRuns         CrawlRun[]
+}
+
+model CrawlRun {
+  id              String   @id @default(cuid())
+  sourceId        String
+  startedAt       DateTime
+  finishedAt      DateTime?
+  status          String
+  fetchedCount    Int      @default(0)
+  dedupedCount    Int      @default(0)
+  errorCount      Int      @default(0)
+  createdAt       DateTime @default(now())
+  source          Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+}
+
+model TrendSignal {
+  id            String   @id @default(cuid())
+  locationKey   String
+  metric        String
+  score         Float
+  label         String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model SearchEvent {
+  id            String   @id @default(cuid())
+  query         String
+  intent        String
+  locationHint  String?
+  budgetHint    String?
+  createdAt     DateTime @default(now())
+}
+
+model QualityMetric {
+  id            String   @id @default(cuid())
+  cardId        String
+  usefulness    Float
+  uniqueness    Float
+  freshness     Float
+  visualQuality Float
+  sourceTrust   Float
+  engagementProbability Float
+  localRelevance Float
+  total         Float
+  createdAt     DateTime @default(now())
+  card          Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
 }

@@ -26,6 +26,16 @@ The operating loop is:
 5. keep fresh
 6. distribute
 
+## AI Model Roles
+
+AFRIKA uses a layered intelligence pipeline:
+
+- Gemini: structure and multimodal understanding
+- Groq: fast user-facing parsing and response
+- DeepSeek: deep reasoning, ranking, comparisons, and judgments
+
+The rule is simple: structure with Gemini, serve fast with Groq, reason with DeepSeek.
+
 ## Build Priority
 
 Stage 1 focuses on:
@@ -37,3 +47,16 @@ Stage 1 focuses on:
 - mobile discovery shell
 
 The platform should feel alive through useful intelligence, not random automatic posting.
+
+## Deployment Split
+
+- Web app and admin app deploy to Vercel
+- API, AI, and ingestion services deploy to a separate server
+- Public domains:
+  - `afrika.ng`
+  - `www.afrika.ng`
+  - `admin.afrika.ng`
+  - `afrika.techculture.live`
+  - `afrika-ai.techculture.live`
+- Web and admin call the server over public HTTPS endpoints
+- The server should allow CORS from the AFRIKA frontend origins

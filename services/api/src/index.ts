@@ -1,25 +1,112 @@
 import Fastify from "fastify";
-import { featuredCards } from "@afrika/shared/content";
+import cors from "@fastify/cors";
+import { store } from "./store.js";
+import { freshnessStatus, interpretSearch, scoreCardTotal } from "@afrika/shared/stage2";
 
 const app = Fastify({ logger: true });
 
+const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
+
+await app.register(cors, {
+  origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+  credentials: true
+});
+
 app.get("/health", async () => ({ ok: true, service: "afrika-api" }));
 
-app.get("/cards/featured", async () => ({
-  items: featuredCards,
+app.get("/feed", async () => ({
+  items: store.cards,
   meta: {
-    rankedBy: ["usefulness", "freshness", "local relevance", "trust", "visual quality"]
+    rankedBy: ["usefulness", "freshness", "local relevance", "trust", "visual quality"],
+    freshnessBuckets: {
+      fresh: store.cards.filter((item) => item.freshnessStatus === "fresh").length,
+      warming: store.cards.filter((item) => item.freshnessStatus === "warming").length,
+      stale: store.cards.filter((item) => item.freshnessStatus === "stale").length
+    }
   }
 }));
 
-app.get("/plans/sample", async () => ({
-  items: [
-    {
-      id: "weekend-lagos",
-      title: "Weekend Lagos Reset",
-      type: "weekend plan"
-    }
-  ]
+app.post("/search/interpret", async (request) => {
+  const body = request.body as { query?: string };
+  return interpretSearch(body.query ?? "");
+});
+
+app.get("/search", async (request) => {
+  const query = String((request.query as { q?: string }).q ?? "");
+  const interpretation = interpretSearch(query);
+
+  return {
+    query,
+    interpretation,
+    items: store.cards.filter((card) =>
+      interpretation.categoryHints.some((hint) => card.category.toLowerCase().includes(hint) || card.tags.includes(hint))
+    )
+  };
+});
+
+app.get("/trends", async () => ({
+  items: store.trendSignals,
+  summary: "Trending intelligence based on saves, searches, and geo activity."
+}));
+
+app.get("/recommendations", async () => ({
+  items: store.recommendationEdges
+}));
+
+app.get("/freshness", async () => ({
+  items: store.cards.map((card) => ({
+    id: card.id,
+    freshnessScore: card.freshnessScore,
+    freshnessStatus: freshnessStatus(card.freshnessScore),
+    trustScore: card.trustScore,
+    relevanceScore: card.relevanceScore
+  }))
+}));
+
+app.get("/cards/:id", async (request, reply) => {
+  const params = request.params as { id: string };
+  const card = store.cards.find((item) => item.id === params.id);
+  if (!card) return reply.code(404).send({ error: "Card not found" });
+  return card;
+});
+
+app.get("/admin/overview", async () => {
+  const qualityPreview = scoreCardTotal({
+    usefulness: 0.84,
+    uniqueness: 0.7,
+    freshness: 0.81,
+    visualQuality: 0.9,
+    sourceTrust: 0.83,
+    engagementProbability: 0.67,
+    localRelevance: 0.88
+  });
+
+  return {
+    cardsInGraph: store.cards.length,
+    activeTrends: store.trendSignals.length,
+    recommendationEdges: store.recommendationEdges.length,
+    qualityPreview: qualityPreview.total
+  };
+});
+
+app.get("/admin/monitoring", async () => ({
+  ingestion: {
+    activeCrawlers: 12,
+    failedExtractions: 3,
+    queuedSources: 8,
+    sourceReliability: 0.82
+  },
+  ai: {
+    pendingSummaries: 128,
+    flaggedOutputs: 7,
+    confidenceFloor: 0.78
+  },
+  trends: store.trendSignals,
+  freshness: store.cards.map((card) => ({
+    id: card.id,
+    status: card.freshnessStatus,
+    lastVerifiedAt: card.lastVerifiedAt
+  }))
 }));
 
 const port = Number(process.env.PORT ?? 4000);

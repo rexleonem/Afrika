@@ -7,11 +7,19 @@ export default function ProfilePage() {
           <h1 className="mt-4 text-4xl font-semibold tracking-tight">Minimal personalization, built around discovery.</h1>
         </header>
 
-        <section className="mt-6 rounded-[28px] border border-white/10 bg-white/5 p-5">
-          <h2 className="text-xl font-medium">Saved cards</h2>
-          <p className="mt-2 text-sm text-white/60">
-            Interests, recent discoveries, and preferences live here without turning the product into a social feed.
-          </p>
+        <section className="mt-6 grid gap-4 md:grid-cols-3">
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <h2 className="text-xl font-medium">Saved plans</h2>
+            <p className="mt-2 text-sm text-white/60">Weekend spots, Lagos discoveries, and curated routes.</p>
+          </article>
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <h2 className="text-xl font-medium">Interests</h2>
+            <p className="mt-2 text-sm text-white/60">Food, culture, neighborhoods, and opportunities.</p>
+          </article>
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <h2 className="text-xl font-medium">Viewed cards</h2>
+            <p className="mt-2 text-sm text-white/60">Recent exploration history used for lightweight personalization.</p>
+          </article>
         </section>
       </div>
     </main>
