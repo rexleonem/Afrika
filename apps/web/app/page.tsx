@@ -26,7 +26,7 @@ const navItems = [
   { href: "/map", label: "Map" },
   { href: "/plans", label: "Plans" },
   { href: "/profile", label: "Profile" },
-];
+] as const;
 
 export default function HomePage() {
   const cityIntelligence = buildCityIntelligence(featuredCards);
