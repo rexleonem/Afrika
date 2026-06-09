@@ -87,7 +87,7 @@ export default function HomePage() {
           <div className="space-y-2">
             <div className="text-xs uppercase tracking-[0.45em] text-white/45">AFRIKA</div>
             <div className="text-lg font-semibold text-white">Living intelligence</div>
-            <p className="text-sm leading-6 text-white/55">Discover -> Understand -> Act</p>
+            <p className="text-sm leading-6 text-white/55">Discover &rarr; Understand &rarr; Act</p>
           </div>
           <nav className="mt-8 space-y-2">
             {navItems.map((item) => (

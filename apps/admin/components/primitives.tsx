@@ -60,7 +60,7 @@ export function QueueRow({ title, detail, tone = "neutral" }: QueueRowProps) {
 
 type SignalBadgeProps = {
   label: string;
-  value: string;
+  value: ReactNode;
 };
 
 export function SignalBadge({ label, value }: SignalBadgeProps) {
