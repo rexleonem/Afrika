@@ -2,8 +2,15 @@ import { featuredCards } from "@afrika/shared/content";
 import { enrichCard, recommendNearby, scoreCardTotal } from "@afrika/shared/stage2";
 import { notFound } from "next/navigation";
 
-export default function DiscoverDetailPage({ params }: { params: { id: string } }) {
-  const card = featuredCards.find((item) => item.id === params.id);
+type DiscoverDetailPageProps = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+export default async function DiscoverDetailPage({ params }: DiscoverDetailPageProps) {
+  const { id } = await params;
+  const card = featuredCards.find((item) => item.id === id);
 
   if (!card) {
     notFound();
