@@ -43,13 +43,14 @@ type DiscoveryCardProps = {
   score?: string;
   highlight?: string;
   cta?: string;
-  link?: string;
+  link?: `/discover/${string}`;
 };
 
 export function DiscoveryCard({ card, score, highlight, cta = "Open insight", link = `/discover/${card.id}` }: DiscoveryCardProps) {
+  const href = (link ?? `/discover/${card.id}`) as `/discover/${string}`;
   return (
     <article className="group overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.04] shadow-[0_28px_90px_rgba(0,0,0,0.34)] backdrop-blur-2xl transition duration-500 hover:-translate-y-1 hover:border-white/20">
-      <Link href={link} className="block">
+      <Link href={href} className="block">
         <div className="afrika-media aspect-[4/5]" style={{ backgroundImage: `url(${card.media.imageUrl})` }}>
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
           <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-5">
