@@ -4,6 +4,7 @@ import { featuredCards } from "@afrika/shared/content";
 import { freshnessStatus, interpretSearch, scoreCardTotal } from "@afrika/shared/stage2";
 import { buildCityIntelligence, buildContentGraph, inferBehavioralProfile, predictDiscovery } from "@afrika/shared/stage3";
 import { buildContributorNetwork, generateCulturalStories, buildHumanIntelligenceLayer } from "@afrika/shared/stage4";
+import { buildActionLayer } from "@afrika/shared/stage5";
 import { motion } from "framer-motion";
 
 export default function HomePage() {
@@ -28,6 +29,7 @@ export default function HomePage() {
     { type: "save", cardId: featuredCards[0]?.id, timestamp: "2026-06-09T05:31:00.000Z" }
   ]);
   const culturalStories = generateCulturalStories(featuredCards, []);
+  const actionLayer = buildActionLayer(featuredCards);
 
   const feedHighlights = featuredCards.map((card) => ({
     ...card,
@@ -129,6 +131,24 @@ export default function HomePage() {
             </div>
           </section>
 
+          <section className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Intent engine</div>
+              <div className="mt-3 text-2xl font-semibold capitalize">{actionLayer.intent.primaryIntent.replace("-", " ")}</div>
+              <p className="mt-2 text-sm text-white/60">{actionLayer.intent.nextStepPrompt}</p>
+            </div>
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Action pathways</div>
+              <div className="mt-3 text-2xl font-semibold">{actionLayer.actions.length}</div>
+              <p className="mt-2 text-sm text-white/60">Soft actions emerge naturally from discovery cards.</p>
+            </div>
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Fulfillment trust</div>
+              <div className="mt-3 text-2xl font-semibold">{actionLayer.analytics.reservationSuccessRate}</div>
+              <p className="mt-2 text-sm text-white/60">Invisible booking and planning flows stay calm and reliable.</p>
+            </div>
+          </section>
+
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {feedHighlights.map((card, index) => (
               <motion.article
@@ -176,6 +196,18 @@ export default function HomePage() {
                   <div className="mt-3 text-lg font-medium">{item.card.title}</div>
                   <p className="mt-2 text-sm text-white/65">{item.reason}</p>
                 </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-[32px] border border-white/10 bg-white/5 p-6">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Action layer</div>
+            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {actionLayer.actions.slice(0, 6).map((action) => (
+                <div key={`${action.type}-${action.label}`} className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                  <div className="text-xs uppercase tracking-[0.3em] text-white/45">{action.label}</div>
+                  <p className="mt-2 text-sm text-white/65">{action.description}</p>
+                </div>
               ))}
             </div>
           </section>

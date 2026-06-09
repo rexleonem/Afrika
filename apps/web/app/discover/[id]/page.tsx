@@ -2,6 +2,7 @@ import { featuredCards } from "@afrika/shared/content";
 import { enrichCard, recommendNearby, scoreCardTotal } from "@afrika/shared/stage2";
 import { buildCityIntelligence, buildContentGraph, predictDiscovery } from "@afrika/shared/stage3";
 import { buildContributorNetwork, generateCulturalStories, structureHumanContribution } from "@afrika/shared/stage4";
+import { buildActionLayer } from "@afrika/shared/stage5";
 import { notFound } from "next/navigation";
 
 type DiscoverDetailPageProps = {
@@ -54,6 +55,7 @@ export default async function DiscoverDetailPage({ params }: DiscoverDetailPageP
     mediaUrl: card.media.imageUrl
   });
   const culturalStories = generateCulturalStories(featuredCards, [humanContribution.insight]);
+  const actionLayer = buildActionLayer(featuredCards);
   const predictiveMatches = predictDiscovery(featuredCards, {
     archetype: "explorer",
     confidence: 0.74,
@@ -159,6 +161,15 @@ export default async function DiscoverDetailPage({ params }: DiscoverDetailPageP
             <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
               <div className="text-xs uppercase tracking-[0.35em] text-white/45">Cultural story</div>
               <p className="mt-3 text-sm text-white/70">{culturalStories[0]?.summary}</p>
+            </div>
+            <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Next action</div>
+              <p className="mt-3 text-sm text-white/70">{actionLayer.intent.nextStepPrompt}</p>
+              <div className="mt-4 space-y-2 text-sm text-white/60">
+                {actionLayer.actions.slice(0, 3).map((action) => (
+                  <div key={action.type}>- {action.label}</div>
+                ))}
+              </div>
             </div>
           </aside>
         </div>

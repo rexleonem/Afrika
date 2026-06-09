@@ -2,6 +2,7 @@ import { featuredCards } from "@afrika/shared/content";
 import { interpretSearch } from "@afrika/shared/stage2";
 import { buildCityIntelligence, inferBehavioralProfile, predictDiscovery } from "@afrika/shared/stage3";
 import { buildHumanIntelligenceLayer, generateCulturalStories } from "@afrika/shared/stage4";
+import { buildActionLayer } from "@afrika/shared/stage5";
 
 export default function SearchPage() {
   const query = interpretSearch("quiet places to work in Lagos");
@@ -13,6 +14,7 @@ export default function SearchPage() {
   const predictiveResults = predictDiscovery(featuredCards, behavioralProfile, cityIntelligence);
   const leadingCity = cityIntelligence.find((city) => city.city === "Lagos");
   const culturalStories = generateCulturalStories(featuredCards, []);
+  const actionLayer = buildActionLayer(featuredCards);
 
   return (
     <main className="min-h-screen px-6 py-8 md:px-10">
@@ -32,6 +34,24 @@ export default function SearchPage() {
             <div className="text-xs uppercase tracking-[0.35em] text-white/45">Ranking hint</div>
             <p className="mt-3 text-xl font-medium">{query.rankingHint}</p>
             <p className="mt-2 text-sm text-white/60">Hybrid search combines semantics, geo relevance, and keywords.</p>
+          </article>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-3">
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Intent</div>
+            <p className="mt-3 text-xl font-medium capitalize">{actionLayer.intent.primaryIntent.replace("-", " ")}</p>
+            <p className="mt-2 text-sm text-white/60">{actionLayer.intent.nextStepPrompt}</p>
+          </article>
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Timing</div>
+            <p className="mt-3 text-xl font-medium">{actionLayer.intent.timingHint}</p>
+            <p className="mt-2 text-sm text-white/60">Recommended window: {actionLayer.plan.timing}</p>
+          </article>
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Suggested action</div>
+            <p className="mt-3 text-xl font-medium">{actionLayer.actions[0]?.label}</p>
+            <p className="mt-2 text-sm text-white/60">{actionLayer.actions[0]?.description}</p>
           </article>
         </section>
 

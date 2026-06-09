@@ -106,6 +106,46 @@ app.get("/human-layer", async () => ({
   summary: "Human intelligence network blended with the Stage 3 discovery graph."
 }));
 
+app.get("/intent", async (request) => {
+  const query = String((request.query as { q?: string }).q ?? "");
+  return {
+    query,
+    intent: store.actionLayer.intent,
+    alternateSignals: store.intentSignals,
+    summary: "Intent engine for translating discovery into real-world actions."
+  };
+});
+
+app.get("/actions", async () => ({
+  items: store.smartActions,
+  summary: "Subtle, contextual action suggestions for places, opportunities, and trips."
+}));
+
+app.get("/reservations", async () => ({
+  items: store.reservationRequests,
+  summary: "Lightweight reservation drafts for venues and experiences."
+}));
+
+app.get("/inquiries", async () => ({
+  items: store.inquiries,
+  summary: "Inquiry workflows for viewing requests, follow-ups, and direct contact."
+}));
+
+app.get("/plans/intelligence", async () => ({
+  items: store.movementPlans,
+  summary: "Route and itinerary intelligence for movement-aware planning."
+}));
+
+app.get("/opportunities", async () => ({
+  items: store.opportunityApplications,
+  summary: "Opportunity summaries and external application pathways."
+}));
+
+app.get("/fulfillment", async () => ({
+  analytics: store.actionAnalytics,
+  summary: "Trust and fulfillment intelligence for action outcomes."
+}));
+
 app.get("/freshness", async () => ({
   items: store.cards.map((card) => ({
     id: card.id,
@@ -142,6 +182,8 @@ app.get("/admin/overview", async () => {
     graphNodes: store.contentGraph.nodes.length,
     contributorProfiles: store.contributorNetwork.profiles.length,
     culturalStories: store.culturalStories.length,
+    actionSignals: store.smartActions.length,
+    opportunityApplications: store.opportunityApplications.length,
     qualityPreview: qualityPreview.total
   };
 });
@@ -165,7 +207,10 @@ app.get("/admin/monitoring", async () => ({
     lastVerifiedAt: card.lastVerifiedAt
   })),
   contributors: store.contributorNetwork.averageTrust,
-  verification: store.verificationQueue.length
+  verification: store.verificationQueue.length,
+  actionAnalytics: store.actionAnalytics,
+  actionSignals: store.smartActions.length,
+  opportunityApplications: store.opportunityApplications.length
 }));
 
 const port = Number(process.env.PORT ?? 4000);

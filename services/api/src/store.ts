@@ -14,6 +14,16 @@ import {
   moderateContribution,
   structureHumanContribution
 } from "@afrika/shared/stage4";
+import {
+  buildActionLayer,
+  buildActionAnalytics,
+  buildInquiryWorkflow,
+  buildMovementPlan,
+  buildOpportunityApplications,
+  buildReservationRequest,
+  buildSmartActions,
+  detectIntent
+} from "@afrika/shared/stage5";
 import { freshnessStatus, scoreCardTotal, type RecommendationEdge, type TrendSignal } from "@afrika/shared/stage2";
 
 const cards = featuredCards.map((card) => {
@@ -107,6 +117,35 @@ const moderationQueue = humanContributions.map((item) =>
   })
 );
 
+const actionLayer = buildActionLayer(cards);
+const intentSignals = [
+  detectIntent("quiet places for a date in Lagos", [
+    { type: "save", weight: 2 },
+    { type: "search", weight: 3 },
+    { type: "map-open", weight: 1 }
+  ]),
+  detectIntent("creative neighborhoods for remote work", [
+    { type: "search", weight: 3 },
+    { type: "save", weight: 2 }
+  ])
+];
+
+const smartActions = cards.map((card) => buildSmartActions(card, actionLayer.intent));
+const reservationRequests = cards
+  .filter((card) => card.kind === "place" || card.kind === "event" || card.kind === "discovery")
+  .slice(0, 2)
+  .map((card) => buildReservationRequest(card, card.kind === "event" ? "event" : "experience"));
+const inquiries = cards.slice(0, 2).map((card) => buildInquiryWorkflow(card));
+const movementPlans = [buildMovementPlan(cards, "Calm Lagos weekend"), buildMovementPlan(cards.slice(1), "Food route through Accra")];
+const opportunityApplications = buildOpportunityApplications(cards);
+const actionAnalytics = buildActionAnalytics([
+  { type: "reservation", completed: true },
+  { type: "visit", completed: true },
+  { type: "plan", completed: true },
+  { type: "application", completed: true },
+  { type: "recommendation", completed: true }
+]);
+
 const trendSignals: TrendSignal[] = [
   { locationKey: "lagos-lekki", metric: "search_frequency", score: 0.88, label: "Fast-rising in Lagos" },
   { locationKey: "nairobi-kilimani", metric: "save_velocity", score: 0.81, label: "High save velocity" }
@@ -136,5 +175,13 @@ export const store = {
   humanContributions,
   verificationQueue,
   culturalStories,
-  moderationQueue
+  moderationQueue,
+  actionLayer,
+  intentSignals,
+  smartActions,
+  reservationRequests,
+  inquiries,
+  movementPlans,
+  opportunityApplications,
+  actionAnalytics
 };
