@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@afrika/shared": "workspace:*",
+    "@afrika/shared": "file:../../packages/shared",
     "fastify": "^5.3.3"
   },
   "devDependencies": {

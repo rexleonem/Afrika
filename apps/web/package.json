@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@afrika/shared": "workspace:*",
+    "@afrika/shared": "file:../../packages/shared",
     "framer-motion": "^12.23.0",
     "next": "^15.3.3",
     "react": "^19.1.1",
