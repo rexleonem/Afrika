@@ -8,6 +8,7 @@
     "./content": "./src/content.ts",
     "./stage2": "./src/stage2.ts",
     "./stage3": "./src/stage3.ts",
+    "./stage4": "./src/stage4.ts",
     "./types": "./src/types.ts",
     "./theme": "./src/theme.ts"
   },

@@ -1,6 +1,7 @@
 import { featuredCards } from "@afrika/shared/content";
 import { enrichCard, recommendNearby, scoreCardTotal } from "@afrika/shared/stage2";
 import { buildCityIntelligence, buildContentGraph, predictDiscovery } from "@afrika/shared/stage3";
+import { buildContributorNetwork, generateCulturalStories, structureHumanContribution } from "@afrika/shared/stage4";
 import { notFound } from "next/navigation";
 
 type DiscoverDetailPageProps = {
@@ -20,6 +21,39 @@ export default async function DiscoverDetailPage({ params }: DiscoverDetailPageP
   const cityIntelligence = buildCityIntelligence(featuredCards);
   const contentGraph = buildContentGraph(featuredCards);
   const cityContext = cityIntelligence.find((city) => city.city === card.location.split(",")[1]?.trim());
+  const contributorNetwork = buildContributorNetwork([
+    {
+      id: `explorer-${card.id}`,
+      name: "Local Explorer",
+      role: "explorer",
+      city: cityContext?.city ?? "Africa",
+      expertiseAreas: ["neighborhood rhythm", "hidden places", "cultural nuance"],
+      verificationHistory: 0.84,
+      contributionQuality: 0.88,
+      consistency: 0.82,
+      localExpertise: 0.9
+    }
+  ]);
+  const humanContribution = structureHumanContribution({
+    card,
+    contributor: {
+      id: `explorer-${card.id}`,
+      name: "Local Explorer",
+      role: "explorer",
+      city: cityContext?.city ?? "Africa",
+      expertiseAreas: ["neighborhood rhythm", "hidden places", "cultural nuance"],
+      verificationHistory: 0.84,
+      contributionQuality: 0.88,
+      consistency: 0.82,
+      localExpertise: 0.9
+    },
+    note: "Locals treat this as a high-signal area for calm, useful discovery.",
+    emotionalContext: "calm, attentive, and grounded",
+    culturalContext: "locally trusted neighborhood rhythm",
+    localTiming: "weekday evenings",
+    mediaUrl: card.media.imageUrl
+  });
+  const culturalStories = generateCulturalStories(featuredCards, [humanContribution.insight]);
   const predictiveMatches = predictDiscovery(featuredCards, {
     archetype: "explorer",
     confidence: 0.74,
@@ -52,6 +86,23 @@ export default async function DiscoverDetailPage({ params }: DiscoverDetailPageP
                 localRelevance: card.relevanceScore
               }).total}
             </p>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
+                <div className="text-xs uppercase tracking-[0.35em] text-white/45">Human validation</div>
+                <p className="mt-3 text-lg font-medium">{humanContribution.verification.verificationState}</p>
+                <p className="mt-2 text-sm text-white/65">
+                  Confidence {humanContribution.verification.confidenceScore} - local trust {humanContribution.contributor.status}
+                </p>
+              </div>
+              <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
+                <div className="text-xs uppercase tracking-[0.35em] text-white/45">Contributor network</div>
+                <p className="mt-3 text-lg font-medium">Average trust {contributorNetwork.averageTrust}</p>
+                <p className="mt-2 text-sm text-white/65">
+                  {contributorNetwork.trustedContributors} trusted contributors in the network.
+                </p>
+              </div>
+            </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
@@ -104,6 +155,10 @@ export default async function DiscoverDetailPage({ params }: DiscoverDetailPageP
                   </div>
                 ))}
               </div>
+            </div>
+            <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Cultural story</div>
+              <p className="mt-3 text-sm text-white/70">{culturalStories[0]?.summary}</p>
             </div>
           </aside>
         </div>

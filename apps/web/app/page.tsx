@@ -3,15 +3,31 @@
 import { featuredCards } from "@afrika/shared/content";
 import { freshnessStatus, interpretSearch, scoreCardTotal } from "@afrika/shared/stage2";
 import { buildCityIntelligence, buildContentGraph, inferBehavioralProfile, predictDiscovery } from "@afrika/shared/stage3";
+import { buildContributorNetwork, generateCulturalStories, buildHumanIntelligenceLayer } from "@afrika/shared/stage4";
 import { motion } from "framer-motion";
 
 export default function HomePage() {
   const cityIntelligence = buildCityIntelligence(featuredCards);
   const contentGraph = buildContentGraph(featuredCards);
+  const humanLayer = buildHumanIntelligenceLayer(featuredCards);
+  const contributorNetwork = buildContributorNetwork([
+    {
+      id: "contributor-lagos-explorer",
+      name: "Lagos Explorer",
+      role: "explorer",
+      city: "Lagos",
+      expertiseAreas: ["hidden places", "neighborhood context", "calm discovery"],
+      verificationHistory: 0.88,
+      contributionQuality: 0.86,
+      consistency: 0.81,
+      localExpertise: 0.89
+    }
+  ]);
   const behavioralProfile = inferBehavioralProfile(featuredCards, [
     { type: "search", query: "quiet places to work in Lagos", timestamp: "2026-06-09T05:30:00.000Z" },
     { type: "save", cardId: featuredCards[0]?.id, timestamp: "2026-06-09T05:31:00.000Z" }
   ]);
+  const culturalStories = generateCulturalStories(featuredCards, []);
 
   const feedHighlights = featuredCards.map((card) => ({
     ...card,
@@ -90,6 +106,26 @@ export default function HomePage() {
               <div className="text-xs uppercase tracking-[0.35em] text-white/45">Graph layers</div>
               <div className="mt-3 text-2xl font-semibold">{contentGraph.nodes.length} nodes</div>
               <p className="mt-2 text-sm text-white/60">Linked discovery clusters connect cities, categories, and related cards.</p>
+            </div>
+          </section>
+
+          <section className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Contributor trust</div>
+              <div className="mt-3 text-2xl font-semibold">{contributorNetwork.averageTrust}</div>
+              <p className="mt-2 text-sm text-white/60">
+                {contributorNetwork.trustedContributors} contributors are already operating above the trust threshold.
+              </p>
+            </div>
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Human intelligence</div>
+              <div className="mt-3 text-2xl font-semibold">{humanLayer.cityIntelligence.length} cities</div>
+              <p className="mt-2 text-sm text-white/60">Human context now sits beside the autonomous graph and predictive layer.</p>
+            </div>
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Cultural stories</div>
+              <div className="mt-3 text-2xl font-semibold">{culturalStories.length}</div>
+              <p className="mt-2 text-sm text-white/60">Editorial cultural movement stories are generated from the intelligence graph.</p>
             </div>
           </section>
 

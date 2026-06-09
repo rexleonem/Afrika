@@ -1,15 +1,18 @@
 import { featuredCards } from "@afrika/shared/content";
 import { interpretSearch } from "@afrika/shared/stage2";
 import { buildCityIntelligence, inferBehavioralProfile, predictDiscovery } from "@afrika/shared/stage3";
+import { buildHumanIntelligenceLayer, generateCulturalStories } from "@afrika/shared/stage4";
 
 export default function SearchPage() {
   const query = interpretSearch("quiet places to work in Lagos");
   const cityIntelligence = buildCityIntelligence(featuredCards);
+  const humanLayer = buildHumanIntelligenceLayer(featuredCards);
   const behavioralProfile = inferBehavioralProfile(featuredCards, [
     { type: "search", query: "quiet places to work in Lagos", timestamp: "2026-06-09T05:30:00.000Z" }
   ]);
   const predictiveResults = predictDiscovery(featuredCards, behavioralProfile, cityIntelligence);
   const leadingCity = cityIntelligence.find((city) => city.city === "Lagos");
+  const culturalStories = generateCulturalStories(featuredCards, []);
 
   return (
     <main className="min-h-screen px-6 py-8 md:px-10">
@@ -49,6 +52,19 @@ export default function SearchPage() {
             <div className="text-xs uppercase tracking-[0.35em] text-white/45">Predictive layer</div>
             <p className="mt-3 text-xl font-medium">{predictiveResults.length} next-best matches</p>
             <p className="mt-2 text-sm text-white/60">The graph surfaces likely follow-up discoveries before the search expands.</p>
+          </article>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-2">
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Human layer</div>
+            <p className="mt-3 text-xl font-medium">{humanLayer.behavioralProfile.archetype.replace("-", " ")}</p>
+            <p className="mt-2 text-sm text-white/60">{humanLayer.graph.nodes.length} connected intelligence nodes</p>
+          </article>
+          <article className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Cultural stories</div>
+            <p className="mt-3 text-xl font-medium">{culturalStories[0]?.title ?? "Local cultural movement"}</p>
+            <p className="mt-2 text-sm text-white/60">{culturalStories[0]?.summary ?? "Editorial cultural context appears here."}</p>
           </article>
         </section>
 

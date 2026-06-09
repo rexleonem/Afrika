@@ -7,6 +7,13 @@ import {
   predictDiscovery,
   selfHealGraph
 } from "@afrika/shared/stage3";
+import {
+  buildContributorNetwork,
+  buildHumanIntelligenceLayer,
+  generateCulturalStories,
+  moderateContribution,
+  structureHumanContribution
+} from "@afrika/shared/stage4";
 import { freshnessStatus, scoreCardTotal, type RecommendationEdge, type TrendSignal } from "@afrika/shared/stage2";
 
 const cards = featuredCards.map((card) => {
@@ -37,6 +44,68 @@ const behavioralProfile = inferBehavioralProfile(cards, [
 const predictiveRecommendations = predictDiscovery(cards, behavioralProfile, cityIntelligence);
 const qualityOptimization = optimizeQuality(cards);
 const selfHealingActions = selfHealGraph(cards);
+const humanLayer = buildHumanIntelligenceLayer(cards);
+
+const contributorSeed = [
+  {
+    id: "contributor-lagos-explorer",
+    name: "Lagos Explorer",
+    role: "explorer" as const,
+    city: "Lagos",
+    expertiseAreas: ["hidden places", "neighborhood context", "calm discovery"],
+    verificationHistory: 0.88,
+    contributionQuality: 0.86,
+    consistency: 0.81,
+    localExpertise: 0.89
+  },
+  {
+    id: "contributor-food-scout",
+    name: "Food Scout",
+    role: "food-scout" as const,
+    city: "Accra",
+    expertiseAreas: ["food culture", "affordability", "local dining"],
+    verificationHistory: 0.84,
+    contributionQuality: 0.9,
+    consistency: 0.77,
+    localExpertise: 0.86
+  }
+];
+
+const contributorNetwork = buildContributorNetwork(contributorSeed);
+
+const humanContributions = [
+  structureHumanContribution({
+    card: cards[0]!,
+    contributor: contributorSeed[0]!,
+    note: "Creative corridor feels safer and more active on weekday afternoons.",
+    emotionalContext: "calm but energetic",
+    culturalContext: "design and studio culture",
+    localTiming: "weekday afternoons",
+    mediaUrl: cards[0]?.media.imageUrl
+  }),
+  structureHumanContribution({
+    card: cards[1]!,
+    contributor: contributorSeed[1]!,
+    note: "Locals visit this coast spot after work for a quiet reset.",
+    emotionalContext: "restful and open",
+    culturalContext: "coastal weekend rhythm",
+    localTiming: "after work",
+    mediaUrl: cards[1]?.media.imageUrl
+  })
+];
+
+const verificationQueue = humanContributions.map((item) => item.verification);
+const culturalStories = generateCulturalStories(cards, humanContributions.map((item) => item.insight));
+const moderationQueue = humanContributions.map((item) =>
+  moderateContribution({
+    contributorId: item.contributor.id,
+    note: item.insight.note,
+    trustScore: item.contributor.trustScore,
+    hasMedia: Boolean(item.insight.cardId),
+    duplicatesDetected: false,
+    misleadingSignals: item.verification.verificationState === "flagged"
+  })
+);
 
 const trendSignals: TrendSignal[] = [
   { locationKey: "lagos-lekki", metric: "search_frequency", score: 0.88, label: "Fast-rising in Lagos" },
@@ -61,5 +130,11 @@ export const store = {
   behavioralProfile,
   predictiveRecommendations,
   qualityOptimization,
-  selfHealingActions
+  selfHealingActions,
+  humanLayer,
+  contributorNetwork,
+  humanContributions,
+  verificationQueue,
+  culturalStories,
+  moderationQueue
 };

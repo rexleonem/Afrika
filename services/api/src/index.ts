@@ -79,6 +79,33 @@ app.get("/self-healing", async () => ({
   summary: "Automatic cleanup actions for stale, duplicate, or low-confidence cards."
 }));
 
+app.get("/contributors", async () => ({
+  profiles: store.contributorNetwork.profiles,
+  averageTrust: store.contributorNetwork.averageTrust,
+  trustedContributors: store.contributorNetwork.trustedContributors,
+  roleDistribution: store.contributorNetwork.roleDistribution
+}));
+
+app.get("/verification", async () => ({
+  items: store.verificationQueue,
+  summary: "Human + AI verification confidence for community intelligence submissions."
+}));
+
+app.get("/stories", async () => ({
+  items: store.culturalStories,
+  summary: "Editorial cultural stories generated from real-world local intelligence."
+}));
+
+app.get("/moderation", async () => ({
+  items: store.moderationQueue,
+  summary: "Collaborative moderation queue for trust and authenticity control."
+}));
+
+app.get("/human-layer", async () => ({
+  layer: store.humanLayer,
+  summary: "Human intelligence network blended with the Stage 3 discovery graph."
+}));
+
 app.get("/freshness", async () => ({
   items: store.cards.map((card) => ({
     id: card.id,
@@ -113,6 +140,8 @@ app.get("/admin/overview", async () => {
     recommendationEdges: store.recommendationEdges.length,
     cityIntelligence: store.cityIntelligence.length,
     graphNodes: store.contentGraph.nodes.length,
+    contributorProfiles: store.contributorNetwork.profiles.length,
+    culturalStories: store.culturalStories.length,
     qualityPreview: qualityPreview.total
   };
 });
@@ -134,7 +163,9 @@ app.get("/admin/monitoring", async () => ({
     id: card.id,
     status: card.freshnessStatus,
     lastVerifiedAt: card.lastVerifiedAt
-  }))
+  })),
+  contributors: store.contributorNetwork.averageTrust,
+  verification: store.verificationQueue.length
 }));
 
 const port = Number(process.env.PORT ?? 4000);
