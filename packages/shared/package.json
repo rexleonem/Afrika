@@ -6,6 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./content": "./src/content.ts",
+    "./stage2": "./src/stage2.ts",
+    "./stage3": "./src/stage3.ts",
     "./types": "./src/types.ts",
     "./theme": "./src/theme.ts"
   },
