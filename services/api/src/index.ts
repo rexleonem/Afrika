@@ -53,6 +53,32 @@ app.get("/recommendations", async () => ({
   items: store.recommendationEdges
 }));
 
+app.get("/graph", async () => ({
+  nodes: store.contentGraph.nodes,
+  edges: store.contentGraph.edges,
+  summary: "Content graph intelligence linking cities, clusters, and discovery pathways."
+}));
+
+app.get("/cities", async () => ({
+  items: store.cityIntelligence,
+  summary: "City intelligence layers for trend momentum, density, and neighborhood context."
+}));
+
+app.get("/behavior", async () => ({
+  profile: store.behavioralProfile,
+  summary: "Inferred user archetype and discovery behavior for personalization."
+}));
+
+app.get("/predictive", async () => ({
+  items: store.predictiveRecommendations,
+  summary: "Predictive discovery ranking for what the user may want next."
+}));
+
+app.get("/self-healing", async () => ({
+  items: store.selfHealingActions,
+  summary: "Automatic cleanup actions for stale, duplicate, or low-confidence cards."
+}));
+
 app.get("/freshness", async () => ({
   items: store.cards.map((card) => ({
     id: card.id,
@@ -85,6 +111,8 @@ app.get("/admin/overview", async () => {
     cardsInGraph: store.cards.length,
     activeTrends: store.trendSignals.length,
     recommendationEdges: store.recommendationEdges.length,
+    cityIntelligence: store.cityIntelligence.length,
+    graphNodes: store.contentGraph.nodes.length,
     qualityPreview: qualityPreview.total
   };
 });

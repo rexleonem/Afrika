@@ -2,9 +2,17 @@
 
 import { featuredCards } from "@afrika/shared/content";
 import { freshnessStatus, interpretSearch, scoreCardTotal } from "@afrika/shared/stage2";
+import { buildCityIntelligence, buildContentGraph, inferBehavioralProfile, predictDiscovery } from "@afrika/shared/stage3";
 import { motion } from "framer-motion";
 
 export default function HomePage() {
+  const cityIntelligence = buildCityIntelligence(featuredCards);
+  const contentGraph = buildContentGraph(featuredCards);
+  const behavioralProfile = inferBehavioralProfile(featuredCards, [
+    { type: "search", query: "quiet places to work in Lagos", timestamp: "2026-06-09T05:30:00.000Z" },
+    { type: "save", cardId: featuredCards[0]?.id, timestamp: "2026-06-09T05:31:00.000Z" }
+  ]);
+
   const feedHighlights = featuredCards.map((card) => ({
     ...card,
     quality: scoreCardTotal({
@@ -18,7 +26,9 @@ export default function HomePage() {
     })
   }));
 
+  const predictiveHighlights = predictDiscovery(featuredCards, behavioralProfile, cityIntelligence);
   const trendQuery = interpretSearch("trending places in Lagos this week");
+  const leadingCity = cityIntelligence[0];
 
   return (
     <main className="min-h-screen px-6 py-8 md:px-10">
@@ -63,6 +73,26 @@ export default function HomePage() {
             </div>
           </section>
 
+          <section className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Behavioral archetype</div>
+              <div className="mt-3 text-2xl font-semibold capitalize">{behavioralProfile.archetype.replace("-", " ")}</div>
+              <p className="mt-2 text-sm text-white/60">Discovery style: {behavioralProfile.discoveryStyle}</p>
+            </div>
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">City intelligence</div>
+              <div className="mt-3 text-2xl font-semibold">{leadingCity?.city ?? "Lagos"}</div>
+              <p className="mt-2 text-sm text-white/60">
+                Density {leadingCity?.discoveryDensity ?? 0} - momentum {leadingCity?.trendMomentum ?? 0}
+              </p>
+            </div>
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Graph layers</div>
+              <div className="mt-3 text-2xl font-semibold">{contentGraph.nodes.length} nodes</div>
+              <p className="mt-2 text-sm text-white/60">Linked discovery clusters connect cities, categories, and related cards.</p>
+            </div>
+          </section>
+
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {feedHighlights.map((card, index) => (
               <motion.article
@@ -94,6 +124,25 @@ export default function HomePage() {
               </motion.article>
             ))}
           </div>
+
+          <section className="rounded-[32px] border border-white/10 bg-white/5 p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="text-xs uppercase tracking-[0.35em] text-white/45">Predictive discovery</div>
+                <h2 className="mt-2 text-2xl font-semibold">What AFRIKA thinks comes next</h2>
+              </div>
+              <div className="text-sm text-white/55">Behavior-aware ranking</div>
+            </div>
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              {predictiveHighlights.map((item) => (
+                <article key={item.card.id} className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                  <div className="text-xs uppercase tracking-[0.3em] text-white/45">{item.horizon}</div>
+                  <div className="mt-3 text-lg font-medium">{item.card.title}</div>
+                  <p className="mt-2 text-sm text-white/65">{item.reason}</p>
+                </article>
+              ))}
+            </div>
+          </section>
         </section>
 
         <aside className="space-y-4">

@@ -1,5 +1,6 @@
 import { featuredCards } from "@afrika/shared/content";
 import { enrichCard, recommendNearby, scoreCardTotal } from "@afrika/shared/stage2";
+import { buildCityIntelligence, buildContentGraph, predictDiscovery } from "@afrika/shared/stage3";
 import { notFound } from "next/navigation";
 
 type DiscoverDetailPageProps = {
@@ -15,6 +16,20 @@ export default async function DiscoverDetailPage({ params }: DiscoverDetailPageP
   if (!card) {
     notFound();
   }
+
+  const cityIntelligence = buildCityIntelligence(featuredCards);
+  const contentGraph = buildContentGraph(featuredCards);
+  const cityContext = cityIntelligence.find((city) => city.city === card.location.split(",")[1]?.trim());
+  const predictiveMatches = predictDiscovery(featuredCards, {
+    archetype: "explorer",
+    confidence: 0.74,
+    preferredKinds: [card.kind],
+    preferredCities: [card.location.split(",")[1]?.trim() ?? card.location],
+    discoveryStyle: "curiosity-led",
+    socialEnergy: "exploratory",
+    travelRadiusKm: 35,
+    signals: ["detail-view"]
+  }, cityIntelligence);
 
   return (
     <main className="min-h-screen px-6 py-8 md:px-10">
@@ -37,13 +52,28 @@ export default async function DiscoverDetailPage({ params }: DiscoverDetailPageP
                 localRelevance: card.relevanceScore
               }).total}
             </p>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
+                <div className="text-xs uppercase tracking-[0.35em] text-white/45">City intelligence</div>
+                <p className="mt-3 text-lg font-medium">{cityContext?.city ?? card.location}</p>
+                <p className="mt-2 text-sm text-white/65">
+                  Momentum {cityContext?.trendMomentum ?? 0} - density {cityContext?.discoveryDensity ?? 0}
+                </p>
+              </div>
+              <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
+                <div className="text-xs uppercase tracking-[0.35em] text-white/45">Graph signal</div>
+                <p className="mt-3 text-lg font-medium">{contentGraph.edges.filter((edge) => edge.from === card.id || edge.to === card.id).length} links</p>
+                <p className="mt-2 text-sm text-white/65">Related discovery pathways already exist in the living graph.</p>
+              </div>
+            </div>
           </section>
           <aside className="space-y-4">
             <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Near by</div>
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Nearby intelligence</div>
               <div className="mt-3 space-y-2 text-sm text-white/70">
                 {card.intelligence.nearbyInsights.map((item) => (
-                  <div key={item}>• {item}</div>
+                  <div key={item}>- {item}</div>
                 ))}
               </div>
             </div>
@@ -60,7 +90,18 @@ export default async function DiscoverDetailPage({ params }: DiscoverDetailPageP
               </p>
               <div className="mt-4 space-y-2 text-sm text-white/60">
                 {recommendNearby(card.title, card.location).map((item) => (
-                  <div key={item}>• {item}</div>
+                  <div key={item}>- {item}</div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
+              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Predictive matches</div>
+              <div className="mt-3 space-y-3 text-sm text-white/70">
+                {predictiveMatches.slice(0, 3).map((item) => (
+                  <div key={item.card.id}>
+                    <div className="font-medium text-white">{item.card.title}</div>
+                    <div className="text-white/55">{item.reason}</div>
+                  </div>
                 ))}
               </div>
             </div>

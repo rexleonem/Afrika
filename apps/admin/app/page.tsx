@@ -1,3 +1,6 @@
+import { featuredCards } from "@afrika/shared/content";
+import { buildCityIntelligence, buildContentGraph, inferBehavioralProfile, optimizeQuality, selfHealGraph } from "@afrika/shared/stage3";
+
 const ingestionHealth = [
   { label: "Active crawlers", value: "12" },
   { label: "Failed extractions", value: "3" },
@@ -5,33 +8,14 @@ const ingestionHealth = [
   { label: "Source reliability", value: "0.82" }
 ];
 
-const trendSignals = [
-  "Trending in Lagos",
-  "Fast-rising neighborhoods",
-  "Weekend hotspots",
-  "Growing opportunity zones"
-];
-
-const freshnessAlerts = [
-  "12 stale cards",
-  "4 expiring trends",
-  "3 inactive place clusters",
-  "5 cards need revalidation"
-];
-
-const contentManagement = [
-  "Create and edit cards",
-  "Manage categories and tags",
-  "Attach or replace media",
-  "Assign locations and coordinates"
-];
-
-const analytics = [
-  "Saves",
-  "Discovery engagement",
-  "Popular locations",
-  "Trending searches"
-];
+const cityIntelligence = buildCityIntelligence(featuredCards);
+const contentGraph = buildContentGraph(featuredCards);
+const behavioralProfile = inferBehavioralProfile(featuredCards, [
+  { type: "save", cardId: featuredCards[0]?.id, timestamp: "2026-06-09T05:31:00.000Z" },
+  { type: "search", query: "weekend spots in Lagos", timestamp: "2026-06-09T05:32:00.000Z" }
+]);
+const qualitySignals = optimizeQuality(featuredCards);
+const healingSignals = selfHealGraph(featuredCards);
 
 export default function AdminPage() {
   return (
@@ -39,9 +23,9 @@ export default function AdminPage() {
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="rounded-[32px] border border-white/10 bg-white/5 p-6">
           <div className="text-xs uppercase tracking-[0.4em] text-white/45">Operations center</div>
-          <h1 className="mt-4 text-3xl font-semibold md:text-5xl">Ingestion, AI, trends, and freshness.</h1>
+          <h1 className="mt-4 text-3xl font-semibold md:text-5xl">Ingestion, AI, graph intelligence, and freshness.</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-white/60">
-            AFRIKA's admin layer monitors the autonomous intelligence network and gives the team precise override controls.
+            AFRIKA&apos;s admin layer now monitors the autonomous intelligence network, the content graph, and self-healing data quality in one place.
           </p>
         </header>
 
@@ -52,6 +36,49 @@ export default function AdminPage() {
               <div className="mt-3 text-4xl font-semibold">{item.value}</div>
             </article>
           ))}
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-3">
+          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">City intelligence</div>
+            <div className="mt-4 space-y-3">
+              {cityIntelligence.map((city) => (
+                <div key={city.cityKey} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
+                  <div className="text-sm text-white/55">{city.city}</div>
+                  <div className="mt-1 text-lg font-medium">
+                    momentum {city.trendMomentum} - density {city.discoveryDensity}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Behavioral AI</div>
+            <div className="mt-4 rounded-[18px] border border-white/10 bg-black/20 p-4">
+              <div className="text-sm text-white/55">Inferred archetype</div>
+              <div className="mt-2 text-2xl font-semibold capitalize">{behavioralProfile.archetype.replace("-", " ")}</div>
+              <p className="mt-2 text-sm text-white/60">{behavioralProfile.discoveryStyle} discovery layer</p>
+            </div>
+            <div className="mt-3 text-sm text-white/60">
+              Preferred cities: {behavioralProfile.preferredCities.join(", ") || "none yet"}
+            </div>
+          </article>
+
+          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Graph scale</div>
+            <div className="mt-4 space-y-3">
+              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm">
+                Nodes: {contentGraph.nodes.length}
+              </div>
+              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm">
+                Edges: {contentGraph.edges.length}
+              </div>
+              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm">
+                Quality-surfaced cards: {qualitySignals.filter((item) => item.shouldSurface).length}
+              </div>
+            </div>
+          </article>
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
@@ -114,23 +141,22 @@ export default function AdminPage() {
 
         <section className="grid gap-6 xl:grid-cols-2">
           <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Content management</div>
-            <div className="mt-4 space-y-3 text-sm text-white/70">
-              {contentManagement.map((item) => (
-                <div key={item} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
-                  {item}
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Quality optimization</div>
+            <div className="mt-4 space-y-3">
+              {qualitySignals.map((item) => (
+                <div key={item.cardId} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm">
+                  {item.cardId} - {item.freshnessState} - {item.total}
                 </div>
               ))}
             </div>
           </article>
 
           <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Analytics</div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {analytics.map((item) => (
-                <div key={item} className="rounded-[20px] border border-white/10 bg-black/20 p-4">
-                  <div className="text-sm text-white/55">{item}</div>
-                  <div className="mt-2 text-lg font-medium">Live</div>
+            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Self-healing</div>
+            <div className="mt-4 space-y-3">
+              {healingSignals.map((item) => (
+                <div key={item.cardId} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm">
+                  {item.action} - {item.cardId}
                 </div>
               ))}
             </div>
@@ -141,7 +167,12 @@ export default function AdminPage() {
           <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
             <div className="text-xs uppercase tracking-[0.35em] text-white/45">Trend monitoring</div>
             <div className="mt-4 space-y-3">
-              {trendSignals.map((item) => (
+              {[
+                "Trending in Lagos",
+                "Fast-rising neighborhoods",
+                "Weekend hotspots",
+                "Growing opportunity zones"
+              ].map((item) => (
                 <div key={item} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm">
                   {item}
                 </div>
@@ -152,9 +183,9 @@ export default function AdminPage() {
           <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
             <div className="text-xs uppercase tracking-[0.35em] text-white/45">Freshness monitoring</div>
             <div className="mt-4 space-y-3">
-              {freshnessAlerts.map((item) => (
-                <div key={item} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm">
-                  {item}
+              {healingSignals.map((item) => (
+                <div key={`${item.cardId}-${item.action}`} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm">
+                  {item.action} - {item.reason}
                 </div>
               ))}
             </div>

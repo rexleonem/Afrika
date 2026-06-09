@@ -1,4 +1,12 @@
 import { featuredCards } from "@afrika/shared/content";
+import {
+  buildCityIntelligence,
+  buildContentGraph,
+  inferBehavioralProfile,
+  optimizeQuality,
+  predictDiscovery,
+  selfHealGraph
+} from "@afrika/shared/stage3";
 import { freshnessStatus, scoreCardTotal, type RecommendationEdge, type TrendSignal } from "@afrika/shared/stage2";
 
 const cards = featuredCards.map((card) => {
@@ -19,6 +27,17 @@ const cards = featuredCards.map((card) => {
   };
 });
 
+const contentGraph = buildContentGraph(cards);
+const cityIntelligence = buildCityIntelligence(cards);
+const behavioralProfile = inferBehavioralProfile(cards, [
+  { type: "search", query: "quiet places to work in Lagos", timestamp: new Date().toISOString() },
+  { type: "save", cardId: cards[0]?.id, timestamp: new Date().toISOString() },
+  { type: "map-open", cardId: cards[1]?.id, timestamp: new Date().toISOString() }
+]);
+const predictiveRecommendations = predictDiscovery(cards, behavioralProfile, cityIntelligence);
+const qualityOptimization = optimizeQuality(cards);
+const selfHealingActions = selfHealGraph(cards);
+
 const trendSignals: TrendSignal[] = [
   { locationKey: "lagos-lekki", metric: "search_frequency", score: 0.88, label: "Fast-rising in Lagos" },
   { locationKey: "nairobi-kilimani", metric: "save_velocity", score: 0.81, label: "High save velocity" }
@@ -36,5 +55,11 @@ const recommendationEdges: RecommendationEdge[] = [
 export const store = {
   cards,
   trendSignals,
-  recommendationEdges
+  recommendationEdges,
+  contentGraph,
+  cityIntelligence,
+  behavioralProfile,
+  predictiveRecommendations,
+  qualityOptimization,
+  selfHealingActions
 };
