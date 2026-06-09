@@ -43,7 +43,7 @@ export default function MapPage() {
                 <InsightRow
                   key={`${pulse.city}-${pulse.hour}`}
                   title={`${pulse.city} - ${pulse.bestWindow}`}
-                  detail={`Pulse ${pulse.pulse}, acceleration ${pulse.acceleration}, best for ${pulse.bestAudience}.`}
+                  detail={`Pulse ${pulse.pulse}, acceleration ${pulse.acceleration}, best for ${ambient.adaptiveInterface.mode.replace("-", " ")}.`}
                 />
               ))}
             </div>
@@ -82,7 +82,7 @@ export default function MapPage() {
                   <div className="text-xs uppercase tracking-[0.35em] text-white/45">{pulse.city}</div>
                   <div className="mt-2 text-lg font-semibold text-white">{pulse.bestWindow}</div>
                   <p className="mt-2 text-sm leading-6 text-white/60">
-                    Pulse {pulse.pulse}, acceleration {pulse.acceleration}, audience {pulse.bestAudience}.
+                    Pulse {pulse.pulse}, acceleration {pulse.acceleration}, best for {ambient.adaptiveInterface.mode.replace("-", " ")}.
                   </p>
                 </div>
               ))}

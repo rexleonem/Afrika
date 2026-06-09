@@ -239,7 +239,7 @@ export default function HomePage() {
                   <InsightRow
                     key={`${pulse.city}-${pulse.hour}`}
                     title={`${pulse.city} - ${pulse.bestWindow}`}
-                    detail={`Pulse ${pulse.pulse}, acceleration ${pulse.acceleration}, ${pulse.bestAudience}`}
+                    detail={`Pulse ${pulse.pulse}, acceleration ${pulse.acceleration}, aligned to ${ambientIntelligence.adaptiveInterface.mode.replace("-", " ")}.`}
                   />
                 ))}
               </div>
