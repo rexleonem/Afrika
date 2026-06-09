@@ -8,6 +8,7 @@ import {
 } from "@afrika/shared/stage4";
 import { buildActionAnalytics, buildActionLayer } from "@afrika/shared/stage5";
 import { buildAmbientIntelligence, buildContinentalIntelligence, buildPersonalOperatingSystem } from "@afrika/shared/stage6";
+import { buildStage7IntelligenceSystem } from "@afrika/shared/stage7";
 import { MetricTile, QueueRow, SectionHeader, SignalBadge } from "../components/primitives";
 
 const contributorSeed = [
@@ -79,6 +80,7 @@ const actionAnalytics = buildActionAnalytics([
 const ambient = buildAmbientIntelligence(featuredCards, "2026-06-09T19:00:00.000Z");
 const personalOS = buildPersonalOperatingSystem(featuredCards, "2026-06-09T19:00:00.000Z");
 const continental = buildContinentalIntelligence();
+const stage7 = buildStage7IntelligenceSystem(featuredCards);
 
 export default function AdminPage() {
   return (
@@ -97,10 +99,11 @@ export default function AdminPage() {
               Content operations, AI enrichment, moderation, trend controls, and trust signals now sit inside a cohesive operational workspace.
             </p>
             <div className="flex flex-wrap gap-2">
-              <SignalBadge label="Mode" value={ambient.adaptiveInterface.mode.replace("-", " ")} />
-              <SignalBadge label="Pulse" value={`${ambient.cityPulse.length} cities`} />
-              <SignalBadge label="Trust" value={contributorNetwork.averageTrust} />
-            </div>
+            <SignalBadge label="Mode" value={ambient.adaptiveInterface.mode.replace("-", " ")} />
+            <SignalBadge label="Pulse" value={`${ambient.cityPulse.length} cities`} />
+            <SignalBadge label="Trust" value={contributorNetwork.averageTrust} />
+            <SignalBadge label="Stage 7" value={stage7.aiControl.checks.every((check) => check.passed) ? "validated" : "review"} />
+          </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <MetricTile label="Contributor trust" value={contributorNetwork.averageTrust} detail="Built from accuracy, consistency, and verification history." />
@@ -120,6 +123,36 @@ export default function AdminPage() {
         <MetricTile label="AI confidence" value="High" detail="Summaries, rankings, and moderation outputs are within expected bounds." />
         <MetricTile label="Trend momentum" value="Rising" detail="Emerging neighborhoods and movement signals are being boosted." />
         <MetricTile label="Verification" value="Active" detail="Human and AI validation continue to support authenticity." />
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <article className="afrika-admin-panel p-6">
+          <SectionHeader
+            eyebrow="Stage 7 feedback loop"
+            title="User behavior now tunes relevance, freshness, and ranking weights automatically."
+            description="The system is no longer static. It is learning from clicks, saves, dwell time, and map interactions."
+          />
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <MetricTile label="Signals" value={`${stage7.feedbackLoop.signals.length}`} detail="Clicks, saves, dwell, map-open, and search-refine signals." />
+            <MetricTile label="Ranking weights" value="Adaptive" detail="Weights shift by engagement, city context, and category performance." />
+            <MetricTile label="Card memory" value={`${stage7.feedbackLoop.cardMemory.length}`} detail="Each card retains performance history and relevance trend." />
+            <MetricTile label="Learning summary" value="Active" detail={stage7.feedbackLoop.learningSummary} />
+          </div>
+        </article>
+
+        <article className="afrika-admin-panel p-6">
+          <SectionHeader
+            eyebrow="Stage 7 hardening"
+            title="Self-healing, city bootstrapping, and load-aware AI routing are now visible."
+            description="This is the control surface for the operational foundation that keeps the platform stable at scale."
+          />
+          <div className="mt-5 space-y-3">
+            <QueueRow title="Self-healing" detail={`${stage7.selfHealing.duplicates.length} duplicate groups, ${stage7.selfHealing.staleness.filter((item) => item.action !== "refresh").length} corrective actions.`} tone="good" />
+            <QueueRow title="City scaling" detail={`${stage7.cityScaling.profiles.length} cities are bootstrapped with demand and trend maps.`} tone="good" />
+            <QueueRow title="AI control" detail={stage7.aiControl.validatorSummary} tone={stage7.aiControl.checks.every((check) => check.passed) ? "good" : "warn"} />
+            <QueueRow title="Performance routing" detail={stage7.performance.gracefulDegradation[0]} tone="good" />
+          </div>
+        </article>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">

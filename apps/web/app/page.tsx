@@ -17,6 +17,7 @@ import {
 } from "@afrika/shared/stage4";
 import { buildActionLayer } from "@afrika/shared/stage5";
 import { buildAmbientIntelligence, buildPersonalOperatingSystem } from "@afrika/shared/stage6";
+import { buildStage7IntelligenceSystem } from "@afrika/shared/stage7";
 import { DiscoveryCard, InsightRow, MetricTile, SectionHeader } from "../components/primitives";
 
 const navItems = [
@@ -63,6 +64,7 @@ export default function HomePage() {
   const actionLayer = buildActionLayer(featuredCards);
   const ambientIntelligence = buildAmbientIntelligence(featuredCards, "2026-06-09T19:00:00.000Z");
   const personalOS = buildPersonalOperatingSystem(featuredCards, "2026-06-09T19:00:00.000Z");
+  const stage7 = buildStage7IntelligenceSystem(featuredCards);
   const predictiveHighlights = predictDiscovery(featuredCards, behavioralProfile, cityIntelligence);
   const trendQuery = interpretSearch("trending places in Lagos this week");
   const feedHighlights = featuredCards.map((card) => ({
@@ -250,6 +252,20 @@ export default function HomePage() {
                 <MetricTile label="City profiles" value={`${cityIntelligence.length}`} detail="Spatial intelligence across locations." />
                 <MetricTile label="Personal routines" value={`${personalOS.routines.length}`} detail="Adaptive timing and context loops." />
               </div>
+            </div>
+          </section>
+
+          <section className="space-y-5">
+            <SectionHeader
+              eyebrow="Stage 7"
+              title="The system learns, self-heals, and scales by itself."
+              description="Feedback signals, duplicate resolution, city bootstraps, and AI consistency checks now sit in the core intelligence layer."
+            />
+            <div className="grid gap-4 xl:grid-cols-4">
+              <MetricTile label="Feedback clusters" value={`${stage7.feedbackLoop.signals.length}`} detail={stage7.feedbackLoop.learningSummary} />
+              <MetricTile label="Self-healing actions" value={`${stage7.selfHealing.staleness.length}`} detail={`${stage7.selfHealing.duplicates.length} duplicate groups were normalized.`} />
+              <MetricTile label="City bootstraps" value={`${stage7.cityScaling.profiles.length}`} detail="Each city has baseline demand, trend, and engagement maps." />
+              <MetricTile label="AI validation" value={stage7.aiControl.checks.every((check) => check.passed) ? "Aligned" : "Review"} detail={stage7.aiControl.validatorSummary} />
             </div>
           </section>
 

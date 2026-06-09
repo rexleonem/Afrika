@@ -171,6 +171,36 @@ app.get("/continent", async () => ({
   summary: "Continental intelligence layers for regional rhythm and cultural patterns."
 }));
 
+app.get("/feedback-loop", async () => ({
+  feedbackLoop: store.stage7System.feedbackLoop,
+  summary: "Adaptive engagement learning loop for ranking and city performance."
+}));
+
+app.get("/self-healing/pipeline", async () => ({
+  selfHealing: store.stage7System.selfHealing,
+  summary: "Duplicate resolution, staleness detection, and confidence scoring."
+}));
+
+app.get("/city-scaling", async () => ({
+  profiles: store.stage7System.cityScaling.profiles,
+  summary: "City bootstrapping and adaptive geo-context profiles."
+}));
+
+app.get("/ai-control", async () => ({
+  aiControl: store.stage7System.aiControl,
+  summary: "Prompt versioning, consistency validation, and model arbitration."
+}));
+
+app.get("/performance", async () => ({
+  performance: store.stage7System.performance,
+  summary: "Caching, event-driven processing, and load-aware routing."
+}));
+
+app.get("/stage7", async () => ({
+  stage7: store.stage7System,
+  summary: "Self-optimizing intelligence network for scaling African discovery."
+}));
+
 app.get("/freshness", async () => ({
   items: store.cards.map((card) => ({
     id: card.id,

@@ -31,6 +31,7 @@ import {
   buildPersonalOperatingSystem,
   buildTemporalIntelligence
 } from "@afrika/shared/stage6";
+import { buildStage7IntelligenceSystem } from "@afrika/shared/stage7";
 import { freshnessStatus, scoreCardTotal, type RecommendationEdge, type TrendSignal } from "@afrika/shared/stage2";
 
 const cards = featuredCards.map((card) => {
@@ -159,6 +160,14 @@ const temporalIntelligence = buildTemporalIntelligence(cards, stage6Timestamp);
 const crossDomainGraph = buildCrossDomainIntelligenceGraph(cards, stage6Timestamp);
 const personalOperatingSystem = buildPersonalOperatingSystem(cards, stage6Timestamp);
 const continentalIntelligence = buildContinentalIntelligence();
+const stage7Interactions = [
+  { cardId: cards[0]?.id, city: "Lagos", category: cards[0]?.category, type: "click" as const, weight: 1.2, timestamp: "2026-06-09T19:05:00.000Z" },
+  { cardId: cards[0]?.id, city: "Lagos", category: cards[0]?.category, type: "save" as const, weight: 1.4, timestamp: "2026-06-09T19:06:00.000Z" },
+  { cardId: cards[1]?.id, city: "Accra", category: cards[1]?.category, type: "dwell" as const, weight: 1.1, timestamp: "2026-06-09T19:07:00.000Z" },
+  { cardId: cards[2]?.id, city: "Nairobi", category: cards[2]?.category, type: "map-open" as const, weight: 1.0, timestamp: "2026-06-09T19:08:00.000Z" },
+  { cardId: cards[2]?.id, city: "Nairobi", category: cards[2]?.category, type: "search-refine" as const, weight: 0.9, timestamp: "2026-06-09T19:09:00.000Z" }
+];
+const stage7System = buildStage7IntelligenceSystem(cards, stage7Interactions);
 
 const trendSignals: TrendSignal[] = [
   { locationKey: "lagos-lekki", metric: "search_frequency", score: 0.88, label: "Fast-rising in Lagos" },
@@ -202,5 +211,7 @@ export const store = {
   temporalIntelligence,
   crossDomainGraph,
   personalOperatingSystem,
-  continentalIntelligence
+  continentalIntelligence,
+  stage7Interactions,
+  stage7System
 };
