@@ -48,6 +48,7 @@ model Card {
   updatedAt       DateTime @updatedAt
   saves           Save[]
   embeddings      Embedding[]
+  qualityMetrics  QualityMetric[]
   source          Source?  @relation(fields: [sourceId], references: [id])
   recommendationFrom RecommendationEdge[] @relation("RecommendationFrom")
   recommendationTo   RecommendationEdge[] @relation("RecommendationTo")
@@ -112,7 +113,7 @@ model Embedding {
   id        String   @id @default(cuid())
   cardId    String
   model     String
-  vector    Unsupported("vector")
+  vector    Json
   createdAt DateTime @default(now())
   card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
 }
