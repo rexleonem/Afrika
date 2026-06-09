@@ -1,12 +1,31 @@
 "use client";
 
+import Link from "next/link";
+import { motion } from "framer-motion";
 import { featuredCards } from "@afrika/shared/content";
 import { freshnessStatus, interpretSearch, scoreCardTotal } from "@afrika/shared/stage2";
-import { buildCityIntelligence, buildContentGraph, inferBehavioralProfile, predictDiscovery } from "@afrika/shared/stage3";
-import { buildContributorNetwork, generateCulturalStories, buildHumanIntelligenceLayer } from "@afrika/shared/stage4";
+import {
+  buildCityIntelligence,
+  buildContentGraph,
+  inferBehavioralProfile,
+  predictDiscovery,
+} from "@afrika/shared/stage3";
+import {
+  buildContributorNetwork,
+  buildHumanIntelligenceLayer,
+  generateCulturalStories,
+} from "@afrika/shared/stage4";
 import { buildActionLayer } from "@afrika/shared/stage5";
 import { buildAmbientIntelligence, buildPersonalOperatingSystem } from "@afrika/shared/stage6";
-import { motion } from "framer-motion";
+import { DiscoveryCard, InsightRow, MetricTile, SectionHeader } from "../components/primitives";
+
+const navItems = [
+  { href: "/", label: "Discover" },
+  { href: "/search", label: "Search" },
+  { href: "/map", label: "Map" },
+  { href: "/plans", label: "Plans" },
+  { href: "/profile", label: "Profile" },
+];
 
 export default function HomePage() {
   const cityIntelligence = buildCityIntelligence(featuredCards);
@@ -22,18 +41,30 @@ export default function HomePage() {
       verificationHistory: 0.88,
       contributionQuality: 0.86,
       consistency: 0.81,
-      localExpertise: 0.89
-    }
+      localExpertise: 0.89,
+    },
+    {
+      id: "contributor-food-scout",
+      name: "Food Scout",
+      role: "food-scout",
+      city: "Accra",
+      expertiseAreas: ["food culture", "affordability", "local dining"],
+      verificationHistory: 0.84,
+      contributionQuality: 0.9,
+      consistency: 0.77,
+      localExpertise: 0.86,
+    },
   ]);
   const behavioralProfile = inferBehavioralProfile(featuredCards, [
     { type: "search", query: "quiet places to work in Lagos", timestamp: "2026-06-09T05:30:00.000Z" },
-    { type: "save", cardId: featuredCards[0]?.id, timestamp: "2026-06-09T05:31:00.000Z" }
+    { type: "save", cardId: featuredCards[0]?.id, timestamp: "2026-06-09T05:31:00.000Z" },
   ]);
   const culturalStories = generateCulturalStories(featuredCards, []);
   const actionLayer = buildActionLayer(featuredCards);
   const ambientIntelligence = buildAmbientIntelligence(featuredCards, "2026-06-09T19:00:00.000Z");
   const personalOS = buildPersonalOperatingSystem(featuredCards, "2026-06-09T19:00:00.000Z");
-
+  const predictiveHighlights = predictDiscovery(featuredCards, behavioralProfile, cityIntelligence);
+  const trendQuery = interpretSearch("trending places in Lagos this week");
   const feedHighlights = featuredCards.map((card) => ({
     ...card,
     quality: scoreCardTotal({
@@ -43,222 +74,226 @@ export default function HomePage() {
       visualQuality: 0.91,
       sourceTrust: card.trustScore,
       engagementProbability: 0.66,
-      localRelevance: card.relevanceScore
-    })
+      localRelevance: card.relevanceScore,
+    }),
   }));
 
-  const predictiveHighlights = predictDiscovery(featuredCards, behavioralProfile, cityIntelligence);
-  const trendQuery = interpretSearch("trending places in Lagos this week");
-  const leadingCity = cityIntelligence[0];
-
   return (
-    <main className="min-h-screen px-6 py-8 md:px-10">
-      <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[220px_minmax(0,1fr)_320px]">
-        <aside className="hidden rounded-[28px] border border-white/10 bg-white/5 p-5 lg:block">
-          <div className="text-xs uppercase tracking-[0.4em] text-white/50">AFRIKA</div>
-          <nav className="mt-8 space-y-4 text-sm text-white/70">
-            <div className="text-white">Discover</div>
-            <div>Search</div>
-            <div>Map</div>
-            <div>Plans</div>
-            <div>Profile</div>
+    <main className="afrika-shell space-y-8 pb-12">
+      <div className="grid gap-6 xl:grid-cols-[220px_minmax(0,1fr)_320px]">
+        <aside className="afrika-panel sticky top-6 hidden h-fit p-5 xl:block">
+          <div className="space-y-2">
+            <div className="text-xs uppercase tracking-[0.45em] text-white/45">AFRIKA</div>
+            <div className="text-lg font-semibold text-white">Living intelligence</div>
+            <p className="text-sm leading-6 text-white/55">Discover -> Understand -> Act</p>
+          </div>
+          <nav className="mt-8 space-y-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center justify-between rounded-[20px] border border-transparent px-4 py-3 text-sm text-white/65 transition hover:border-white/10 hover:bg-white/5 hover:text-white"
+              >
+                <span>{item.label}</span>
+                <span aria-hidden="true">/</span>
+              </Link>
+            ))}
           </nav>
+          <div className="mt-8 rounded-[24px] border border-white/10 bg-black/20 p-4">
+            <div className="afrika-label">System status</div>
+            <p className="mt-3 text-sm leading-6 text-white/65">Ambient intelligence, human context, and action planning are synced across the network.</p>
+          </div>
         </aside>
 
-        <section className="space-y-6">
-          <header className="rounded-[32px] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-            <div className="text-xs uppercase tracking-[0.4em] text-white/50">Visual intelligence layer</div>
-            <h1 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight md:text-6xl">
-              Africa, rendered as a living stream of places, signals, and action.
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-white/65 md:text-base">
-              Discover what matters, understand it instantly, and move with clarity.
-            </p>
-          </header>
-
-          <section className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Trend signal</div>
-              <div className="mt-3 text-2xl font-semibold">Trending in Lagos</div>
-              <p className="mt-2 text-sm text-white/60">{trendQuery.rankingHint}</p>
-            </div>
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Freshness</div>
-              <div className="mt-3 text-2xl font-semibold">{freshnessStatus(feedHighlights[0]?.quality.freshness ?? 0.8)}</div>
-              <p className="mt-2 text-sm text-white/60">Cards decay automatically when they lose confidence.</p>
-            </div>
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Reasoning</div>
-              <div className="mt-3 text-2xl font-semibold">Context-aware</div>
-              <p className="mt-2 text-sm text-white/60">AI adds why-it-matters, comparisons, and nearby discovery.</p>
-            </div>
-          </section>
-
-          <section className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Behavioral archetype</div>
-              <div className="mt-3 text-2xl font-semibold capitalize">{behavioralProfile.archetype.replace("-", " ")}</div>
-              <p className="mt-2 text-sm text-white/60">Discovery style: {behavioralProfile.discoveryStyle}</p>
-            </div>
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">City intelligence</div>
-              <div className="mt-3 text-2xl font-semibold">{leadingCity?.city ?? "Lagos"}</div>
-              <p className="mt-2 text-sm text-white/60">
-                Density {leadingCity?.discoveryDensity ?? 0} - momentum {leadingCity?.trendMomentum ?? 0}
-              </p>
-            </div>
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Graph layers</div>
-              <div className="mt-3 text-2xl font-semibold">{contentGraph.nodes.length} nodes</div>
-              <p className="mt-2 text-sm text-white/60">Linked discovery clusters connect cities, categories, and related cards.</p>
-            </div>
-          </section>
-
-          <section className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Contributor trust</div>
-              <div className="mt-3 text-2xl font-semibold">{contributorNetwork.averageTrust}</div>
-              <p className="mt-2 text-sm text-white/60">
-                {contributorNetwork.trustedContributors} contributors are already operating above the trust threshold.
-              </p>
-            </div>
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Human intelligence</div>
-              <div className="mt-3 text-2xl font-semibold">{humanLayer.cityIntelligence.length} cities</div>
-              <p className="mt-2 text-sm text-white/60">Human context now sits beside the autonomous graph and predictive layer.</p>
-            </div>
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Cultural stories</div>
-              <div className="mt-3 text-2xl font-semibold">{culturalStories.length}</div>
-              <p className="mt-2 text-sm text-white/60">Editorial cultural movement stories are generated from the intelligence graph.</p>
-            </div>
-          </section>
-
-          <section className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Intent engine</div>
-              <div className="mt-3 text-2xl font-semibold capitalize">{actionLayer.intent.primaryIntent.replace("-", " ")}</div>
-              <p className="mt-2 text-sm text-white/60">{actionLayer.intent.nextStepPrompt}</p>
-            </div>
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Action pathways</div>
-              <div className="mt-3 text-2xl font-semibold">{actionLayer.actions.length}</div>
-              <p className="mt-2 text-sm text-white/60">Soft actions emerge naturally from discovery cards.</p>
-            </div>
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Fulfillment trust</div>
-              <div className="mt-3 text-2xl font-semibold">{actionLayer.analytics.reservationSuccessRate}</div>
-              <p className="mt-2 text-sm text-white/60">Invisible booking and planning flows stay calm and reliable.</p>
-            </div>
-          </section>
-
-          <section className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Ambient mode</div>
-              <div className="mt-3 text-2xl font-semibold capitalize">{ambientIntelligence.adaptiveInterface.mode.replace("-", " ")}</div>
-              <p className="mt-2 text-sm text-white/60">{ambientIntelligence.adaptiveInterface.tone}</p>
-            </div>
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">City pulse</div>
-              <div className="mt-3 text-2xl font-semibold">{ambientIntelligence.cityPulse[0]?.city ?? "Lagos"}</div>
-              <p className="mt-2 text-sm text-white/60">{ambientIntelligence.cityPulse[0]?.bestWindow}</p>
-            </div>
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.35em] text-white/45">Personal OS</div>
-              <div className="mt-3 text-2xl font-semibold">{personalOS.routines.length}</div>
-              <p className="mt-2 text-sm text-white/60">Ambient routines adapt around movement, timing, and context.</p>
-            </div>
-          </section>
-
-          <section className="rounded-[32px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Ambient suggestions</div>
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
-              {ambientIntelligence.suggestions.map((item) => (
-                <div key={`${item.city}-${item.title}`} className="rounded-[24px] border border-white/10 bg-black/20 p-4">
-                  <div className="text-xs uppercase tracking-[0.3em] text-white/45">{item.city}</div>
-                  <p className="mt-2 text-sm text-white/75">{item.title}</p>
-                  <p className="mt-2 text-xs text-white/55">{item.reason}</p>
+        <section className="space-y-8">
+          <header className="afrika-panel-strong overflow-hidden p-6 sm:p-8">
+            <div className="grid gap-8 lg:grid-cols-[1.25fr_0.75fr]">
+              <div className="space-y-6">
+                <div className="flex flex-wrap gap-2">
+                  <span className="afrika-chip">Visual intelligence layer</span>
+                  <span className="afrika-chip">African reality OS</span>
+                  <span className="afrika-chip">Ambient discovery</span>
                 </div>
-              ))}
-            </div>
-          </section>
-
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {feedHighlights.map((card, index) => (
-              <motion.article
-                key={card.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08 }}
-                className="overflow-hidden rounded-[30px] border border-white/10 bg-white/5 shadow-glow"
-              >
-                <div className="aspect-[4/5] bg-cover bg-center" style={{ backgroundImage: `url(${card.media.imageUrl})` }} />
-                <div className="space-y-4 p-5">
-                  <div className="flex items-center justify-between gap-4 text-xs uppercase tracking-[0.28em] text-white/45">
-                    <span>{card.category}</span>
-                    <span>{card.location}</span>
-                  </div>
-                  <h2 className="text-2xl font-medium tracking-tight">{card.title}</h2>
-                  <p className="text-sm leading-6 text-white/70">{card.intelligence.summary}</p>
-                  <p className="text-xs uppercase tracking-[0.28em] text-white/45">
-                    quality {card.quality.total} · freshness {card.freshnessScore}
+                <div className="space-y-4">
+                  <div className="afrika-label">Home feed</div>
+                  <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-7xl">
+                    Africa, rendered as a cinematic stream of places, signals, and actions.
+                  </h1>
+                  <p className="max-w-2xl text-sm leading-7 text-white/65 sm:text-base">
+                    Premium discovery for African life, with AI insights, spatial context, and action paths that feel natural rather than transactional.
                   </p>
-                  <div className="flex flex-wrap gap-2">
-                    {card.tags.slice(0, 4).map((tag) => (
-                      <span key={tag} className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/70">
-                        {tag}
-                      </span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <MetricTile label="Trend signal" value="Lagos rising" detail={trendQuery.rankingHint} />
+                  <MetricTile label="Freshness" value={freshnessStatus(feedHighlights[0]?.quality.freshness ?? 0.8)} detail="Cards decay when signal quality fades." />
+                  <MetricTile label="Reasoning" value="Context aware" detail="Why it matters, comparisons, and nearby intelligence." />
+                </div>
+              </div>
+
+              <div className="afrika-panel relative overflow-hidden p-5">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(200,155,92,0.22),transparent_55%)]" />
+                <div className="relative space-y-5">
+                  <div className="flex items-center justify-between">
+                    <div className="afrika-label">Ambient briefing</div>
+                    <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-white/70">Live</div>
+                  </div>
+                  <div>
+                    <div className="text-sm uppercase tracking-[0.35em] text-white/45">Current mode</div>
+                    <div className="mt-3 text-3xl font-semibold text-white capitalize">
+                      {ambientIntelligence.adaptiveInterface.mode.replace("-", " ")}
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-white/60">{ambientIntelligence.adaptiveInterface.tone}</p>
+                  </div>
+                  <div className="grid gap-3">
+                    {ambientIntelligence.suggestions.slice(0, 3).map((item) => (
+                      <InsightRow key={`${item.city}-${item.title}`} title={item.title} detail={`${item.city} - ${item.reason}`} />
                     ))}
                   </div>
                 </div>
-              </motion.article>
-            ))}
-          </div>
-
-          <section className="rounded-[32px] border border-white/10 bg-white/5 p-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <div className="text-xs uppercase tracking-[0.35em] text-white/45">Predictive discovery</div>
-                <h2 className="mt-2 text-2xl font-semibold">What AFRIKA thinks comes next</h2>
               </div>
-              <div className="text-sm text-white/55">Behavior-aware ranking</div>
             </div>
-            <div className="mt-5 grid gap-4 md:grid-cols-3">
+          </header>
+
+          <section className="grid gap-4 lg:grid-cols-3">
+            <MetricTile label="Behavioral archetype" value={behavioralProfile.archetype.replace("-", " ")} detail={`Discovery style: ${behavioralProfile.discoveryStyle}`} />
+            <MetricTile
+              label="City intelligence"
+              value={cityIntelligence[0]?.city ?? "Lagos"}
+              detail={`Density ${cityIntelligence[0]?.discoveryDensity ?? 0} and momentum ${cityIntelligence[0]?.trendMomentum ?? 0}`}
+            />
+            <MetricTile label="Graph layers" value={`${contentGraph.nodes.length} nodes`} detail="Linked city, culture, and discovery pathways." />
+          </section>
+
+          <section className="space-y-5">
+            <SectionHeader
+              eyebrow="Editorial feed"
+              title="Immersive cards that feel collectible, spatial, and useful."
+              description="A richer rhythm of large visual cards, AI overlays, and localized discovery sections."
+            />
+            <div className="grid gap-4 xl:grid-cols-[1.35fr_0.65fr]">
+              <div className="grid gap-5 lg:grid-cols-2">
+                {feedHighlights.map((card, index) => (
+                  <motion.div
+                    key={card.id}
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.55, delay: index * 0.08 }}
+                  >
+                    <DiscoveryCard
+                      card={card}
+                      score={`Q ${card.quality.total}`}
+                      highlight={card.intelligence.whyItMatters}
+                      cta="Open intelligence"
+                    />
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="space-y-4">
+                <div className="afrika-panel p-5">
+                  <div className="afrika-label">Context layers</div>
+                  <div className="mt-4 grid gap-3">
+                    <InsightRow title="City intelligence" detail={`${cityIntelligence[0]?.city ?? "Lagos"} is showing ${cityIntelligence[0]?.trendMomentum ?? 0} trend momentum.`} />
+                    <InsightRow title="Human layer" detail={`${humanLayer.cityIntelligence.length} cities now have human context alongside AI structure.`} />
+                    <InsightRow title="Contributor trust" detail={`${contributorNetwork.averageTrust} average trust, with ${contributorNetwork.trustedContributors} trusted contributors.`} />
+                    <InsightRow title="Cultural stories" detail={`${culturalStories.length} editorial movement stories generated from the graph.`} />
+                  </div>
+                </div>
+
+                <div className="afrika-panel p-5">
+                  <div className="afrika-label">Action layer</div>
+                  <div className="mt-4 space-y-3">
+                    <InsightRow title={actionLayer.intent.primaryIntent.replace("-", " ")} detail={actionLayer.intent.nextStepPrompt} />
+                    <InsightRow title="Fulfillment trust" detail={`${actionLayer.analytics.reservationSuccessRate} reservation success, with calm invisible actions.`} />
+                    <InsightRow title="Personal OS" detail={`${personalOS.routines.length} ambient routines are adapting to timing and movement.`} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-5">
+            <SectionHeader
+              eyebrow="Predictive discovery"
+              title="What AFRIKA expects you may want next."
+              description="The system predicts follow-up discoveries based on behavior, geography, and ambient signals."
+            />
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {predictiveHighlights.map((item) => (
-                <article key={item.card.id} className="rounded-[24px] border border-white/10 bg-black/20 p-4">
-                  <div className="text-xs uppercase tracking-[0.3em] text-white/45">{item.horizon}</div>
-                  <div className="mt-3 text-lg font-medium">{item.card.title}</div>
-                  <p className="mt-2 text-sm text-white/65">{item.reason}</p>
+                <article key={item.card.id} className="afrika-panel p-5">
+                  <div className="afrika-label">{item.horizon}</div>
+                  <div className="mt-3 text-xl font-semibold text-white">{item.card.title}</div>
+                  <p className="mt-2 text-sm leading-6 text-white/60">{item.reason}</p>
                 </article>
               ))}
             </div>
           </section>
 
-          <section className="rounded-[32px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Action layer</div>
-            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {actionLayer.actions.slice(0, 6).map((action) => (
-                <div key={`${action.type}-${action.label}`} className="rounded-[24px] border border-white/10 bg-black/20 p-4">
-                  <div className="text-xs uppercase tracking-[0.3em] text-white/45">{action.label}</div>
-                  <p className="mt-2 text-sm text-white/65">{action.description}</p>
-                </div>
+          <section className="grid gap-4 xl:grid-cols-2">
+            <div className="afrika-panel p-5">
+              <SectionHeader eyebrow="Ambient discovery" title="Suggestions that surface before the user asks." />
+              <div className="mt-5 grid gap-3">
+                {ambientIntelligence.cityPulse.map((pulse) => (
+                  <InsightRow
+                    key={`${pulse.city}-${pulse.hour}`}
+                    title={`${pulse.city} - ${pulse.bestWindow}`}
+                    detail={`Pulse ${pulse.pulse}, acceleration ${pulse.acceleration}, ${pulse.bestAudience}`}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="afrika-panel p-5">
+              <SectionHeader eyebrow="Intelligence graph" title="Connected discovery layers." />
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <MetricTile label="Nodes" value={`${contentGraph.nodes.length}`} detail="Places, neighborhoods, and culture clusters." />
+                <MetricTile label="Edges" value={`${contentGraph.edges.length}`} detail="Relationships powering recommendations." />
+                <MetricTile label="City profiles" value={`${cityIntelligence.length}`} detail="Spatial intelligence across locations." />
+                <MetricTile label="Personal routines" value={`${personalOS.routines.length}`} detail="Adaptive timing and context loops." />
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-5">
+            <SectionHeader
+              eyebrow="Live layers"
+              title="Editorial sections, not a noisy feed."
+              description="Trending areas, nearby intelligence, and useful discoveries remain organized by context."
+            />
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {[
+                { label: "Trending now", detail: "Areas accelerating in local saves and search signals." },
+                { label: "Nearby discoveries", detail: "Places closest to the user's current city pulse." },
+                { label: "Editor picks", detail: "High-trust discoveries selected for utility and clarity." },
+                { label: "AI curated", detail: "Cards scored for freshness, relevance, and visual quality." },
+              ].map((item) => (
+                <InsightRow key={item.label} title={item.label} detail={item.detail} />
               ))}
             </div>
           </section>
         </section>
 
         <aside className="space-y-4">
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Intelligence</div>
-            <p className="mt-3 text-lg leading-7 text-white/85">Discover → Understand → Act</p>
+          <div className="afrika-panel sticky top-6 p-5">
+            <div className="afrika-label">Operational pulse</div>
+            <div className="mt-4 text-2xl font-semibold text-white">Living intelligence</div>
             <p className="mt-3 text-sm leading-6 text-white/60">
-              Useful, calm, and spatially aware discovery for African life.
+              Discovery, context, and action are coordinated so the interface feels calm even when the system is active.
             </p>
           </div>
-          <div className="rounded-[28px] border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-5">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Freshness</div>
-            <div className="mt-3 text-3xl font-semibold">0.91</div>
-            <p className="mt-2 text-sm text-white/60">Recent, trusted, and locally relevant.</p>
+
+          <div className="afrika-panel p-5">
+            <div className="afrika-label">Freshness</div>
+            <div className="mt-3 text-4xl font-semibold text-white">0.91</div>
+            <p className="mt-2 text-sm leading-6 text-white/60">Recent, trusted, and locally relevant signal across the feed.</p>
+          </div>
+
+          <div className="afrika-panel p-5">
+            <div className="afrika-label">Intent engine</div>
+            <div className="mt-4 space-y-3">
+              <InsightRow title={actionLayer.intent.primaryIntent.replace("-", " ")} detail={actionLayer.intent.nextStepPrompt} />
+              <InsightRow title="Timing" detail={actionLayer.intent.timingHint} />
+              <InsightRow title="Recommendation" detail={actionLayer.actions[0]?.description ?? "A next action appears here."} />
+            </div>
           </div>
         </aside>
       </div>

@@ -4,10 +4,11 @@ import {
   buildHumanIntelligenceLayer,
   generateCulturalStories,
   moderateContribution,
-  structureHumanContribution
+  structureHumanContribution,
 } from "@afrika/shared/stage4";
 import { buildActionAnalytics, buildActionLayer } from "@afrika/shared/stage5";
 import { buildAmbientIntelligence, buildContinentalIntelligence, buildPersonalOperatingSystem } from "@afrika/shared/stage6";
+import { MetricTile, QueueRow, SectionHeader, SignalBadge } from "../components/primitives";
 
 const contributorSeed = [
   {
@@ -19,7 +20,7 @@ const contributorSeed = [
     verificationHistory: 0.88,
     contributionQuality: 0.86,
     consistency: 0.81,
-    localExpertise: 0.89
+    localExpertise: 0.89,
   },
   {
     id: "contributor-food-scout",
@@ -30,8 +31,8 @@ const contributorSeed = [
     verificationHistory: 0.84,
     contributionQuality: 0.9,
     consistency: 0.77,
-    localExpertise: 0.86
-  }
+    localExpertise: 0.86,
+  },
 ];
 
 const contributorNetwork = buildContributorNetwork(contributorSeed);
@@ -45,7 +46,7 @@ const humanContributions = [
     emotionalContext: "calm, focused, and curious",
     culturalContext: "design and studio culture",
     localTiming: "weekday afternoons",
-    mediaUrl: featuredCards[0]?.media.imageUrl
+    mediaUrl: featuredCards[0]?.media.imageUrl,
   }),
   structureHumanContribution({
     card: featuredCards[1]!,
@@ -54,8 +55,8 @@ const humanContributions = [
     emotionalContext: "restful and open",
     culturalContext: "coastal rhythm and weekend movement",
     localTiming: "after work",
-    mediaUrl: featuredCards[1]?.media.imageUrl
-  })
+    mediaUrl: featuredCards[1]?.media.imageUrl,
+  }),
 ];
 const culturalStories = generateCulturalStories(featuredCards, humanContributions.map((item) => item.insight));
 const moderationQueue = humanContributions.map((item) =>
@@ -65,15 +66,15 @@ const moderationQueue = humanContributions.map((item) =>
     trustScore: item.contributor.trustScore,
     hasMedia: true,
     duplicatesDetected: false,
-    misleadingSignals: item.verification.verificationState === "flagged"
-  })
+    misleadingSignals: item.verification.verificationState === "flagged",
+  }),
 );
 const actionAnalytics = buildActionAnalytics([
   { type: "reservation", completed: true },
   { type: "visit", completed: true },
   { type: "plan", completed: true },
   { type: "application", completed: false },
-  { type: "recommendation", completed: true }
+  { type: "recommendation", completed: true },
 ]);
 const ambient = buildAmbientIntelligence(featuredCards, "2026-06-09T19:00:00.000Z");
 const personalOS = buildPersonalOperatingSystem(featuredCards, "2026-06-09T19:00:00.000Z");
@@ -81,182 +82,172 @@ const continental = buildContinentalIntelligence();
 
 export default function AdminPage() {
   return (
-    <main className="min-h-screen bg-[#050505] px-6 py-8 text-[#F5F1EA]">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <header className="rounded-[32px] border border-white/10 bg-white/5 p-6">
-          <div className="text-xs uppercase tracking-[0.4em] text-white/45">Operations center</div>
-          <h1 className="mt-4 text-3xl font-semibold md:text-5xl">Intelligence, fulfillment, and trust in one calm workspace.</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-white/60">
-            AFRIKA&apos;s admin layer now tracks contributor quality, verification, cultural stories, and real-world action outcomes.
-          </p>
-        </header>
-
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <article className="rounded-[26px] border border-white/10 bg-white/5 p-5">
-            <div className="text-sm text-white/55">Contributor trust</div>
-            <div className="mt-3 text-4xl font-semibold">{contributorNetwork.averageTrust}</div>
-          </article>
-          <article className="rounded-[26px] border border-white/10 bg-white/5 p-5">
-            <div className="text-sm text-white/55">Action signals</div>
-            <div className="mt-3 text-4xl font-semibold">{actionAnalytics.completedPlans}</div>
-          </article>
-          <article className="rounded-[26px] border border-white/10 bg-white/5 p-5">
-            <div className="text-sm text-white/55">Fulfillment rate</div>
-            <div className="mt-3 text-4xl font-semibold">{actionAnalytics.reservationSuccessRate}</div>
-          </article>
-          <article className="rounded-[26px] border border-white/10 bg-white/5 p-5">
-            <div className="text-sm text-white/55">Human stories</div>
-            <div className="mt-3 text-4xl font-semibold">{culturalStories.length}</div>
-          </article>
-          <article className="rounded-[26px] border border-white/10 bg-white/5 p-5">
-            <div className="text-sm text-white/55">Ambient cues</div>
-            <div className="mt-3 text-4xl font-semibold">{ambient.suggestions.length}</div>
-          </article>
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Action monitoring</div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {[
-                ["Reservations", "Lightweight and stable"],
-                ["Inquiries", "Low-friction and tracked"],
-                ["Plan activity", "Growing"],
-                ["Opportunity actions", "Steady"]
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-[20px] border border-white/10 bg-black/20 p-4">
-                  <div className="text-sm text-white/55">{label}</div>
-                  <div className="mt-2 text-lg font-medium">{value}</div>
-                </div>
-              ))}
+    <main className="afrika-admin-shell space-y-8 pb-12">
+      <header className="afrika-admin-panel overflow-hidden p-6 sm:p-8">
+        <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
+          <div className="space-y-5">
+            <div className="flex flex-wrap gap-2">
+              <span className="afrika-admin-chip">Operations center</span>
+              <span className="afrika-admin-chip">AI pipeline</span>
+              <span className="afrika-admin-chip">Trust network</span>
             </div>
-          </article>
-
-          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Action layer</div>
-            <div className="mt-4 space-y-3 text-sm text-white/70">
-              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">{actionLayer.intent.nextStepPrompt}</div>
-              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
-                Primary action: {actionLayer.actions[0]?.label}
-              </div>
-              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
-                Preferred route: {actionLayer.plan.title}
-              </div>
-              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
-                Fulfillment trust: {actionLayer.analytics.reservationSuccessRate}
-              </div>
+            <div className="afrika-admin-kicker">Admin</div>
+            <h1 className="afrika-admin-title max-w-3xl">The control center for a living intelligence network.</h1>
+            <p className="max-w-2xl text-sm leading-7 text-white/65 sm:text-base">
+              Content operations, AI enrichment, moderation, trend controls, and trust signals now sit inside a cohesive operational workspace.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <SignalBadge label="Mode" value={ambient.adaptiveInterface.mode.replace("-", " ")} />
+              <SignalBadge label="Pulse" value={`${ambient.cityPulse.length} cities`} />
+              <SignalBadge label="Trust" value={contributorNetwork.averageTrust} />
             </div>
-          </article>
-        </section>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <MetricTile label="Contributor trust" value={contributorNetwork.averageTrust} detail="Built from accuracy, consistency, and verification history." />
+            <MetricTile label="Action signals" value={`${actionAnalytics.completedPlans}`} detail="Plan completions and real-world actions stay visible." />
+            <MetricTile label="Fulfillment rate" value={actionAnalytics.reservationSuccessRate} detail="Invisible actions remain reliable." />
+            <MetricTile
+              label="Human stories"
+              value={`${culturalStories.length}`}
+              detail={`${humanLayer.graph.nodes.length} graph nodes now blend human context with AI structure.`}
+            />
+          </div>
+        </div>
+      </header>
 
-        <section className="grid gap-6 xl:grid-cols-2">
-          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Contributor intelligence</div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {contributorNetwork.profiles.map((profile) => (
-                <div key={profile.id} className="rounded-[18px] border border-white/10 bg-black/20 p-4">
-                  <div className="text-sm text-white/55">{profile.status}</div>
-                  <div className="mt-2 text-lg font-medium">{profile.name}</div>
-                  <div className="mt-1 text-sm text-white/60">
-                    {profile.city} - {profile.role.replace("-", " ")}
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricTile label="Ingestion health" value="Stable" detail="Distributed workers, freshness checks, and source scoring remain healthy." />
+        <MetricTile label="AI confidence" value="High" detail="Summaries, rankings, and moderation outputs are within expected bounds." />
+        <MetricTile label="Trend momentum" value="Rising" detail="Emerging neighborhoods and movement signals are being boosted." />
+        <MetricTile label="Verification" value="Active" detail="Human and AI validation continue to support authenticity." />
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <article className="afrika-admin-panel p-6">
+          <SectionHeader
+            eyebrow="Content operations center"
+            title="Visual moderation queues with freshness and AI enrichment context."
+            description="The admin surface now reads like an operational intelligence desk instead of a generic CRUD table."
+          />
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            {featuredCards.map((card) => (
+              <div key={card.id} className="rounded-[22px] border border-white/10 bg-black/20 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.35em] text-white/45">{card.category}</div>
+                    <div className="mt-2 text-lg font-medium text-white">{card.title}</div>
                   </div>
+                  <div className="text-xs text-white/55">Fresh {card.freshnessScore.toFixed(2)}</div>
                 </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Verification dashboard</div>
-            <div className="mt-4 space-y-3">
-              {humanContributions.map((item) => (
-                <div key={item.insight.id} className="rounded-[18px] border border-white/10 bg-black/20 p-4">
-                  <div className="text-sm text-white/55">{item.verification.verificationState}</div>
-                  <div className="mt-2 text-lg font-medium">{item.insight.note}</div>
-                  <div className="mt-1 text-sm text-white/60">
-                    confidence {item.verification.confidenceScore} - {item.contributor.status}
-                  </div>
+                <p className="mt-3 text-sm leading-6 text-white/60">{card.intelligence.summary}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <SignalBadge label="Trust" value={card.trustScore.toFixed(2)} />
+                  <SignalBadge label="Relevance" value={card.relevanceScore.toFixed(2)} />
                 </div>
-              ))}
-            </div>
-          </article>
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-3">
-          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Cultural stories</div>
-            <div className="mt-4 space-y-3 text-sm text-white/70">
-              {culturalStories.map((story) => (
-                <div key={story.id} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
-                  <div className="font-medium text-white">{story.title}</div>
-                  <div className="mt-1 text-white/60">{story.summary}</div>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Moderation queue</div>
-            <div className="mt-4 space-y-3 text-sm text-white/70">
-              {moderationQueue.map((item) => (
-                <div key={item.contributorId} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
-                  <div className="font-medium text-white">{item.action}</div>
-                  <div className="mt-1 text-white/60">{item.reasons.join(", ") || "clean"}</div>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Fulfillment analytics</div>
-            <div className="mt-4 space-y-3 text-sm text-white/70">
-              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">Completed visits: {actionAnalytics.completedVisits}</div>
-              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">Completed plans: {actionAnalytics.completedPlans}</div>
-              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">Applications: {actionAnalytics.applicationsSubmitted}</div>
-              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">Accepted recommendations: {actionAnalytics.acceptedRecommendations}</div>
-            </div>
-          </article>
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-3">
-          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Live intelligence</div>
-            <div className="mt-4 space-y-3 text-sm text-white/70">
-              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
-                Mode: {ambient.adaptiveInterface.mode.replace("-", " ")}
               </div>
-              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
-                City pulse: {ambient.cityPulse[0]?.city} - {ambient.cityPulse[0]?.bestWindow}
-              </div>
-              <div className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
-                Weather: {ambient.environmentalSignals[0]?.weather} / traffic {ambient.environmentalSignals[0]?.traffic}
-              </div>
-            </div>
-          </article>
+            ))}
+          </div>
+        </article>
 
-          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Orchestration</div>
-            <div className="mt-4 space-y-3 text-sm text-white/70">
-              {personalOS.routines.map((routine) => (
-                <div key={routine} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
-                  {routine}
-                </div>
-              ))}
-            </div>
-          </article>
+        <article className="afrika-admin-panel p-6">
+          <SectionHeader
+            eyebrow="AI pipeline dashboard"
+            title="Track generation queues, moderation confidence, and failed jobs."
+            description="The interface emphasizes state, trust, and freshness over raw noise."
+          />
+          <div className="mt-5 space-y-3">
+            <QueueRow title="Generation queue" detail="Summaries and contextual layers are flowing through the enrichment pipeline." tone="good" />
+            <QueueRow title="Moderation queue" detail="Low-confidence contributions stay visible for human review." tone="warn" />
+            <QueueRow title="Ranking outputs" detail="Deep reasoning and freshness weighting are feeding the live feeds." tone="good" />
+            <QueueRow title="Failed jobs" detail="Retry policy and health checks remain within acceptable thresholds." />
+          </div>
+        </article>
+      </section>
 
-          <article className="rounded-[30px] border border-white/10 bg-white/5 p-6">
-            <div className="text-xs uppercase tracking-[0.35em] text-white/45">Continental view</div>
-            <div className="mt-4 space-y-3 text-sm text-white/70">
-              {continental.map((region) => (
-                <div key={region.region} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3">
-                  <div className="font-medium text-white">{region.region}</div>
-                  <div className="mt-1 text-white/60">{region.cityPersonality.join(", ")}</div>
-                </div>
-              ))}
-            </div>
-          </article>
-        </section>
-      </div>
+      <section className="grid gap-6 xl:grid-cols-[1fr_1fr_0.9fr]">
+        <article className="afrika-admin-panel p-6">
+          <SectionHeader
+            eyebrow="Analytics experience"
+            title="Geographic activity, save behavior, and category momentum become visible."
+            description="The analytics layer now mirrors the spatial intelligence story of the platform."
+          />
+          <div className="mt-5 space-y-3">
+            {[
+              "Lagos creative corridors are showing the strongest save velocity.",
+              "Coastal discovery themes are outperforming generic city listings.",
+              "Opportunity content is converting into plan saves more often than expected.",
+            ].map((item) => (
+              <QueueRow key={item} title="Signal" detail={item} tone="good" />
+            ))}
+          </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <MetricTile label="Discovery flow" value="Healthy" detail="Users move from feed to map to plan with continuity." />
+            <MetricTile label="Category momentum" value="Mixed" detail="Places and culture remain strongest." />
+            <MetricTile label="Save velocity" value="Rising" detail="Cards with utility continue to outperform." />
+          </div>
+        </article>
+
+        <article className="afrika-admin-panel p-6">
+          <SectionHeader
+            eyebrow="Feed control system"
+            title="Editorial controls for trend boosting and regional prioritization."
+            description="The goal is calibrated intelligence, not vanity metrics or noisy management."
+          />
+          <div className="mt-5 grid gap-3">
+            <QueueRow title="Region prioritization" detail="Lagos and Accra remain high-signal regions for curated boosting." tone="good" />
+            <QueueRow title="Seasonal pinning" detail="Weekend and evening content can be weighted more aggressively." />
+            <QueueRow title="AI override tools" detail="Editors can quietly adjust low-confidence outputs." tone="warn" />
+            <QueueRow title="Content weighting" detail="Use usefulness, freshness, and trust over reach alone." tone="good" />
+          </div>
+        </article>
+
+        <article className="afrika-admin-panel p-6">
+          <SectionHeader
+            eyebrow="Verification and trust"
+            title="Human validation keeps the ecosystem authentic."
+            description="Contributor quality, moderation confidence, and source reliability remain traceable."
+          />
+          <div className="mt-5 space-y-3">
+            {humanContributions.map((item) => (
+              <QueueRow
+                key={item.insight.id}
+                title={item.contributor.status}
+                detail={`${item.insight.note} Confidence ${item.verification.confidenceScore}.`}
+                tone={item.verification.verificationState === "verified" ? "good" : "warn"}
+              />
+            ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <article className="afrika-admin-panel p-6">
+          <SectionHeader
+            eyebrow="Human intelligence"
+            title="Editorial context and contributor quality sit beside the autonomous graph."
+            description="The platform treats human knowledge as a trust layer rather than a social feed."
+          />
+          <div className="mt-5 space-y-3">
+            {culturalStories.map((story) => (
+              <QueueRow key={story.id} title={story.title} detail={story.summary} tone="good" />
+            ))}
+          </div>
+        </article>
+
+        <article className="afrika-admin-panel p-6">
+          <SectionHeader
+            eyebrow="Operational intelligence"
+            title="Ambient, temporal, and continental views stay visible in one place."
+            description="Admin should understand city pulse and orchestration without becoming noisy."
+          />
+          <div className="mt-5 space-y-3">
+            <QueueRow title="Ambient mode" detail={`${ambient.adaptiveInterface.mode.replace("-", " ")} - ${ambient.adaptiveInterface.tone}`} tone="good" />
+            <QueueRow title="City pulse" detail={`${ambient.cityPulse[0]?.city} - ${ambient.cityPulse[0]?.bestWindow}`} tone="good" />
+            <QueueRow title="Personal OS" detail={`${personalOS.routines.length} adaptive routines are active.`} tone="good" />
+            <QueueRow title="Continental view" detail={`${continental.length} regions tracked with localized personality layers.`} tone="good" />
+          </div>
+        </article>
+      </section>
     </main>
   );
 }
