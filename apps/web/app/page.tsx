@@ -9,6 +9,7 @@ import { buildActionLayer } from "@afrika/shared/stage5";
 import { buildAmbientIntelligence } from "@afrika/shared/stage6";
 import { buildStage8WorldModel } from "@afrika/shared/stage8";
 import { buildStage9CivilizationalIntelligenceSystem } from "@afrika/shared/stage9";
+import { buildStage10ConsciousnessSystem } from "@afrika/shared/stage10";
 import { DiscoveryCard, InsightRow, MetricTile, SectionHeader } from "../components/primitives";
 import { TrendCard, NeighborhoodCard } from "../components/cards/discovery-card";
 import { AIInsightPanel, ContextPanel } from "../components/panels/ai-insight-panel";
@@ -28,6 +29,7 @@ const actionLayer = buildActionLayer(featuredCards);
 const ambientIntelligence = buildAmbientIntelligence(featuredCards, "2026-06-09T19:00:00.000Z");
 const stage8 = buildStage8WorldModel(featuredCards);
 const stage9 = buildStage9CivilizationalIntelligenceSystem(featuredCards);
+const stage10 = buildStage10ConsciousnessSystem(featuredCards);
 const predictiveHighlights = predictDiscovery(featuredCards, behavioralProfile, cityIntelligence);
 const trendQuery = interpretSearch("trending places in Lagos this week");
 const feedHighlights = featuredCards.map((card) => ({
@@ -615,6 +617,22 @@ export default function HomePage() {
           <MetricTile label="Forecasts" value={`${stage9.futureForecasts.length}`} detail="Future cultural trajectories." />
           <MetricTile label="Generations" value={`${stage9.generationalIntelligence.length}`} detail="Youth to intergenerational intelligence." />
           <MetricTile label="Global network" value={`${stage9.globalAfricanNetwork.length}`} detail="Diaspora and cross-continental diffusion." />
+        </div>
+      </section>
+
+      <section className="px-4 sm:px-8 lg:px-12 mt-20">
+        <ScrollReveal>
+          <SectionHeader
+            eyebrow="Planetary consciousness"
+            title="Emotional movement, cultural synchronization, and self-reflective intelligence now align."
+            description="Stage 10 adds a calmer planetary layer that reads the emotional shape of African reality without turning the feed into a dashboard."
+          />
+        </ScrollReveal>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <MetricTile label="Consciousness pulses" value={`${stage10.consciousnessEngine.length}`} detail="City emotional movement layers." />
+          <MetricTile label="Emotional civilization" value={`${stage10.emotionalCivilization.length}`} detail="Warmth, intensity, creativity, and reflection." />
+          <MetricTile label="Cultural sync" value={`${stage10.culturalSynchronization.length}`} detail="Diaspora and global rhythm alignment." />
+          <MetricTile label="Living organism" value={stage10.livingOrganism.vitality.toFixed(2)} detail="A self-aware African intelligence organism." />
         </div>
       </section>
 

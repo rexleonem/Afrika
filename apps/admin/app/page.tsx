@@ -11,6 +11,7 @@ import { buildAmbientIntelligence, buildContinentalIntelligence, buildPersonalOp
 import { buildStage7IntelligenceSystem } from "@afrika/shared/stage7";
 import { buildStage8WorldModel } from "@afrika/shared/stage8";
 import { buildStage9CivilizationalIntelligenceSystem } from "@afrika/shared/stage9";
+import { buildStage10ConsciousnessSystem } from "@afrika/shared/stage10";
 import { AmbientGlow } from "../components/motion/ambient-glow";
 import { ScrollReveal } from "../components/motion/scroll-reveal";
 import { MetricTile, QueueRow, SectionHeader, SignalBadge } from "../components/primitives";
@@ -87,6 +88,7 @@ const continental = buildContinentalIntelligence();
 const stage7 = buildStage7IntelligenceSystem(featuredCards);
 const stage8 = buildStage8WorldModel(featuredCards);
 const stage9 = buildStage9CivilizationalIntelligenceSystem(featuredCards);
+const stage10 = buildStage10ConsciousnessSystem(featuredCards);
 
 export default function AdminPage() {
   return (
@@ -390,6 +392,42 @@ export default function AdminPage() {
                 tone={item.urgency === "high" ? "warn" : "good"}
               />
             ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <article className="afrika-panel p-6">
+          <SectionHeader
+            eyebrow="Stage 10 consciousness layer"
+            title="Emotional movement, cultural synchronization, and self-reflective AI now read as one planetary organism."
+            description="The observatory now tracks the atmosphere of African reality with emotional, cultural, and continuity-aware synthesis."
+          />
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <MetricTile label="Consciousness pulses" value={`${stage10.consciousnessEngine.length}`} detail="City-level emotional and cultural rhythm layers." />
+            <MetricTile label="Emotional civilization" value={`${stage10.emotionalCivilization.length}`} detail="Calmness, intensity, warmth, and reflection across regions." />
+            <MetricTile label="Cultural sync" value={`${stage10.culturalSynchronization.length}`} detail="Diaspora and global movement alignment." />
+            <MetricTile label="Knowledge mesh" value={`${stage10.planetaryKnowledgeMesh.length}`} detail="Cities and diaspora bridges in one living mesh." />
+          </div>
+          <div className="mt-5 space-y-3">
+            <QueueRow title="Organism vitality" detail={stage10.livingOrganism.summary} tone="good" />
+            <QueueRow title="Memory grid" detail={stage10.intergenerationalContinuity.summary} tone="good" />
+            <QueueRow title="Self reflection" detail={stage10.selfReflectiveAI.summary} tone="good" />
+          </div>
+        </article>
+
+        <article className="afrika-panel p-6">
+          <SectionHeader
+            eyebrow="Planetary intelligence"
+            title="A calmer, more emotional intelligence layer for African civilization is now visible."
+            description="Consciousness monitoring should stay elegant, human, and useful rather than turning into a noisy dashboard."
+          />
+          <div className="mt-5 space-y-3">
+            {stage10.consciousnessEngine.slice(0, 3).map((pulse) => (
+              <QueueRow key={pulse.city} title={pulse.city} detail={pulse.resonance} tone="good" />
+            ))}
+            <QueueRow title="Reality harmonization" detail={stage10.realityHarmonization[0]?.synthesis ?? "Harmonization layers are active."} tone="good" />
+            <QueueRow title="Societal simulation" detail={stage10.societalSimulations[0]?.outcome ?? "Simulation systems are warming up."} tone="good" />
           </div>
         </article>
       </section>
