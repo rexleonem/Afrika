@@ -326,7 +326,7 @@ export default function AdminPage() {
             <MetricTile label="Predictive reality" value={`${stage8.predictiveReality.length}`} detail="Forecasts for urban, cultural, and tourism shifts." />
           </div>
           <div className="mt-5 space-y-3">
-            <QueueRow title="Agent coordination" detail={stage8.orchestration.summary} tone="good" />
+            <QueueRow title="Agent coordination" detail={stage8.orchestration.coordinationGraph.summary} tone="good" />
             <QueueRow title="Learning loops" detail={stage8.selfEvolving.summary} tone="good" />
             <QueueRow title="Simulation layer" detail={stage8.simulations[0]?.outcome ?? "Simulation outputs are warming up."} tone="good" />
           </div>
