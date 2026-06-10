@@ -168,29 +168,31 @@ export function buildStage9CivilizationalIntelligenceSystem(
     continuityScore: clamp((card.freshnessScore + card.trustScore + card.relevanceScore) / 3 + index * 0.01)
   }));
 
-  const historicalNodes: HistoricalIntelligenceNode[] = [
-    ...cityIntelligence.map((city) => ({
+  const cityNodes: HistoricalIntelligenceNode[] = cityIntelligence.map((city) => ({
       id: `city:${city.cityKey}`,
       label: city.city,
       kind: "city" as const,
       period: "present",
       intensity: clamp(city.trendMomentum)
-    })),
-    ...civilizationalMemory.slice(0, 8).map((entry, index) => ({
+    }));
+
+  const memoryNodes: HistoricalIntelligenceNode[] = civilizationalMemory.slice(0, 8).map((entry, index) => ({
       id: `memory:${entry.city}:${index}`,
       label: entry.neighborhood,
       kind: index % 3 === 0 ? "culture" : index % 3 === 1 ? "movement" : "memory",
       period: entry.timeSpan,
       intensity: entry.continuityScore
-    })),
-    ...worldModel.digitalTwins.slice(0, 4).map((twin, index) => ({
+    }));
+
+  const twinNodes: HistoricalIntelligenceNode[] = worldModel.digitalTwins.slice(0, 4).map((twin, index) => ({
       id: `twin:${twin.city}:${index}`,
       label: twin.city,
       kind: "movement" as const,
       period: "forecast",
       intensity: twin.currentPulse
-    }))
-  ];
+    }));
+
+  const historicalNodes: HistoricalIntelligenceNode[] = [...cityNodes, ...memoryNodes, ...twinNodes];
 
   const historicalEdges: HistoricalIntelligenceEdge[] = contentGraph.edges.slice(0, 14).map((edge) => ({
     from: edge.from,
