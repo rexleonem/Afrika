@@ -11,6 +11,8 @@ import { buildAmbientIntelligence, buildContinentalIntelligence, buildPersonalOp
 import { buildStage7IntelligenceSystem } from "@afrika/shared/stage7";
 import { buildStage8WorldModel } from "@afrika/shared/stage8";
 import { buildStage9CivilizationalIntelligenceSystem } from "@afrika/shared/stage9";
+import { AmbientGlow } from "../components/motion/ambient-glow";
+import { ScrollReveal } from "../components/motion/scroll-reveal";
 import { MetricTile, QueueRow, SectionHeader, SignalBadge } from "../components/primitives";
 
 const contributorSeed = [
@@ -90,46 +92,68 @@ export default function AdminPage() {
   return (
     <main className="afrika-shell space-y-8 pb-12">
       <header className="afrika-panel overflow-hidden p-6 sm:p-8">
+        <AmbientGlow variant="gold" size="lg" className="top-8 right-[-5%]" opacity={0.28} />
+        <AmbientGlow variant="forest" size="md" className="bottom-0 left-[-8%]" opacity={0.18} animationDelay="-4s" />
         <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-5">
-            <div className="flex flex-wrap gap-2">
-              <span className="afrika-chip">Operations center</span>
-              <span className="afrika-chip">AI pipeline</span>
-              <span className="afrika-chip">Trust network</span>
-            </div>
-            <div className="afrika-label">Admin</div>
-            <h1 className="afrika-hero-title max-w-3xl">The control center for a living intelligence network.</h1>
-            <p className="max-w-2xl text-sm leading-7 text-white/65 sm:text-base">
-              Content operations, AI enrichment, moderation, trend controls, and trust signals now sit inside a cohesive operational workspace.
-            </p>
-            <div className="flex flex-wrap gap-2">
-            <SignalBadge label="Mode" value={ambient.adaptiveInterface.mode.replace("-", " ")} />
-            <SignalBadge label="Pulse" value={`${ambient.cityPulse.length} cities`} />
-            <SignalBadge label="Trust" value={contributorNetwork.averageTrust} />
-            <SignalBadge label="Stage 7" value={stage7.aiControl.checks.every((check) => check.passed) ? "validated" : "review"} />
-            <SignalBadge label="Stage 8" value={stage8.worldModel.length > 0 ? "model active" : "review"} />
-            <SignalBadge label="Stage 9" value={stage9.civilizationalMemory.length > 0 ? "memory alive" : "review"} />
-          </div>
+            <ScrollReveal>
+              <div className="flex flex-wrap gap-2">
+                <span className="afrika-chip">Operations center</span>
+                <span className="afrika-chip">AI pipeline</span>
+                <span className="afrika-chip">Trust network</span>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal delay={0.04}>
+              <div className="afrika-label">Admin</div>
+            </ScrollReveal>
+            <ScrollReveal delay={0.08}>
+              <h1 className="afrika-hero-title max-w-3xl">The control center for a living intelligence network.</h1>
+            </ScrollReveal>
+            <ScrollReveal delay={0.12}>
+              <p className="max-w-2xl text-sm leading-7 text-white/65 sm:text-base">
+                Content operations, AI enrichment, moderation, trend controls, and trust signals now sit inside a cohesive operational workspace.
+              </p>
+            </ScrollReveal>
+            <ScrollReveal delay={0.16}>
+              <div className="flex flex-wrap gap-2">
+                <SignalBadge label="Mode" value={ambient.adaptiveInterface.mode.replace("-", " ")} />
+                <SignalBadge label="Pulse" value={`${ambient.cityPulse.length} cities`} />
+                <SignalBadge label="Trust" value={contributorNetwork.averageTrust} />
+                <SignalBadge label="Stage 7" value={stage7.aiControl.checks.every((check) => check.passed) ? "validated" : "review"} />
+                <SignalBadge label="Stage 8" value={stage8.worldModel.length > 0 ? "model active" : "review"} />
+                <SignalBadge label="Stage 9" value={stage9.civilizationalMemory.length > 0 ? "memory alive" : "review"} />
+              </div>
+            </ScrollReveal>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <MetricTile label="Contributor trust" value={contributorNetwork.averageTrust} detail="Built from accuracy, consistency, and verification history." />
-            <MetricTile label="Action signals" value={`${actionAnalytics.completedPlans}`} detail="Plan completions and real-world actions stay visible." />
-            <MetricTile label="Fulfillment rate" value={actionAnalytics.reservationSuccessRate} detail="Invisible actions remain reliable." />
-            <MetricTile
-              label="Human stories"
-              value={`${culturalStories.length}`}
-              detail={`${humanLayer.graph.nodes.length} graph nodes now blend human context with AI structure.`}
-            />
+            <ScrollReveal delay={0.02}>
+              <MetricTile label="Contributor trust" value={contributorNetwork.averageTrust} detail="Built from accuracy, consistency, and verification history." />
+            </ScrollReveal>
+            <ScrollReveal delay={0.06}>
+              <MetricTile label="Action signals" value={`${actionAnalytics.completedPlans}`} detail="Plan completions and real-world actions stay visible." />
+            </ScrollReveal>
+            <ScrollReveal delay={0.1}>
+              <MetricTile label="Fulfillment rate" value={actionAnalytics.reservationSuccessRate} detail="Invisible actions remain reliable." />
+            </ScrollReveal>
+            <ScrollReveal delay={0.14}>
+              <MetricTile
+                label="Human stories"
+                value={`${culturalStories.length}`}
+                detail={`${humanLayer.graph.nodes.length} graph nodes now blend human context with AI structure.`}
+              />
+            </ScrollReveal>
           </div>
         </div>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricTile label="Ingestion health" value="Stable" detail="Distributed workers, freshness checks, and source scoring remain healthy." />
-        <MetricTile label="AI confidence" value="High" detail="Summaries, rankings, and moderation outputs are within expected bounds." />
-        <MetricTile label="Trend momentum" value="Rising" detail="Emerging neighborhoods and movement signals are being boosted." />
-        <MetricTile label="Verification" value="Active" detail="Human and AI validation continue to support authenticity." />
-      </section>
+      <ScrollReveal>
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <MetricTile label="Ingestion health" value="Stable" detail="Distributed workers, freshness checks, and source scoring remain healthy." />
+          <MetricTile label="AI confidence" value="High" detail="Summaries, rankings, and moderation outputs are within expected bounds." />
+          <MetricTile label="Trend momentum" value="Rising" detail="Emerging neighborhoods and movement signals are being boosted." />
+          <MetricTile label="Verification" value="Active" detail="Human and AI validation continue to support authenticity." />
+        </section>
+      </ScrollReveal>
 
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <article className="afrika-panel p-6">
@@ -319,7 +343,7 @@ export default function AdminPage() {
               <QueueRow
                 key={agent.id}
                 title={agent.type.toUpperCase()}
-                detail={`${agent.focus} · ${agent.status} · autonomy ${agent.autonomyLevel.toFixed(2)}`}
+                detail={`${agent.focus} - ${agent.status} - autonomy ${agent.autonomyLevel.toFixed(2)}`}
                 tone="good"
               />
             ))}
