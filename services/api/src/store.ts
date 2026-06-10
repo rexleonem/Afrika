@@ -33,6 +33,7 @@ import {
 } from "@afrika/shared/stage6";
 import { buildStage7IntelligenceSystem } from "@afrika/shared/stage7";
 import { buildStage8WorldModel } from "@afrika/shared/stage8";
+import { buildStage9CivilizationalIntelligenceSystem } from "@afrika/shared/stage9";
 import { freshnessStatus, scoreCardTotal, type RecommendationEdge, type TrendSignal } from "@afrika/shared/stage2";
 
 const cards = featuredCards.map((card) => {
@@ -170,6 +171,7 @@ const stage7Interactions = [
 ];
 const stage7System = buildStage7IntelligenceSystem(cards, stage7Interactions);
 const stage8System = buildStage8WorldModel(cards);
+const stage9System = buildStage9CivilizationalIntelligenceSystem(cards);
 
 const trendSignals: TrendSignal[] = [
   { locationKey: "lagos-lekki", metric: "search_frequency", score: 0.88, label: "Fast-rising in Lagos" },
@@ -216,5 +218,6 @@ export const store = {
   continentalIntelligence,
   stage7Interactions,
   stage7System,
-  stage8System
+  stage8System,
+  stage9System
 };

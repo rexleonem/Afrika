@@ -9,6 +9,8 @@ import {
 import { buildActionAnalytics, buildActionLayer } from "@afrika/shared/stage5";
 import { buildAmbientIntelligence, buildContinentalIntelligence, buildPersonalOperatingSystem } from "@afrika/shared/stage6";
 import { buildStage7IntelligenceSystem } from "@afrika/shared/stage7";
+import { buildStage8WorldModel } from "@afrika/shared/stage8";
+import { buildStage9CivilizationalIntelligenceSystem } from "@afrika/shared/stage9";
 import { MetricTile, QueueRow, SectionHeader, SignalBadge } from "../components/primitives";
 
 const contributorSeed = [
@@ -81,20 +83,22 @@ const ambient = buildAmbientIntelligence(featuredCards, "2026-06-09T19:00:00.000
 const personalOS = buildPersonalOperatingSystem(featuredCards, "2026-06-09T19:00:00.000Z");
 const continental = buildContinentalIntelligence();
 const stage7 = buildStage7IntelligenceSystem(featuredCards);
+const stage8 = buildStage8WorldModel(featuredCards);
+const stage9 = buildStage9CivilizationalIntelligenceSystem(featuredCards);
 
 export default function AdminPage() {
   return (
-    <main className="afrika-admin-shell space-y-8 pb-12">
-      <header className="afrika-admin-panel overflow-hidden p-6 sm:p-8">
+    <main className="afrika-shell space-y-8 pb-12">
+      <header className="afrika-panel overflow-hidden p-6 sm:p-8">
         <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-5">
             <div className="flex flex-wrap gap-2">
-              <span className="afrika-admin-chip">Operations center</span>
-              <span className="afrika-admin-chip">AI pipeline</span>
-              <span className="afrika-admin-chip">Trust network</span>
+              <span className="afrika-chip">Operations center</span>
+              <span className="afrika-chip">AI pipeline</span>
+              <span className="afrika-chip">Trust network</span>
             </div>
-            <div className="afrika-admin-kicker">Admin</div>
-            <h1 className="afrika-admin-title max-w-3xl">The control center for a living intelligence network.</h1>
+            <div className="afrika-label">Admin</div>
+            <h1 className="afrika-hero-title max-w-3xl">The control center for a living intelligence network.</h1>
             <p className="max-w-2xl text-sm leading-7 text-white/65 sm:text-base">
               Content operations, AI enrichment, moderation, trend controls, and trust signals now sit inside a cohesive operational workspace.
             </p>
@@ -103,6 +107,8 @@ export default function AdminPage() {
             <SignalBadge label="Pulse" value={`${ambient.cityPulse.length} cities`} />
             <SignalBadge label="Trust" value={contributorNetwork.averageTrust} />
             <SignalBadge label="Stage 7" value={stage7.aiControl.checks.every((check) => check.passed) ? "validated" : "review"} />
+            <SignalBadge label="Stage 8" value={stage8.worldModel.length > 0 ? "model active" : "review"} />
+            <SignalBadge label="Stage 9" value={stage9.civilizationalMemory.length > 0 ? "memory alive" : "review"} />
           </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -126,7 +132,7 @@ export default function AdminPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <article className="afrika-admin-panel p-6">
+        <article className="afrika-panel p-6">
           <SectionHeader
             eyebrow="Stage 7 feedback loop"
             title="User behavior now tunes relevance, freshness, and ranking weights automatically."
@@ -140,7 +146,7 @@ export default function AdminPage() {
           </div>
         </article>
 
-        <article className="afrika-admin-panel p-6">
+        <article className="afrika-panel p-6">
           <SectionHeader
             eyebrow="Stage 7 hardening"
             title="Self-healing, city bootstrapping, and load-aware AI routing are now visible."
@@ -156,7 +162,7 @@ export default function AdminPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <article className="afrika-admin-panel p-6">
+        <article className="afrika-panel p-6">
           <SectionHeader
             eyebrow="Content operations center"
             title="Visual moderation queues with freshness and AI enrichment context."
@@ -164,7 +170,7 @@ export default function AdminPage() {
           />
           <div className="mt-5 grid gap-3 md:grid-cols-2">
             {featuredCards.map((card) => (
-              <div key={card.id} className="rounded-[22px] border border-white/10 bg-black/20 p-4">
+              <div key={card.id} className="rounded-[22px] border border-white/10 glass-subtle p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="text-xs uppercase tracking-[0.35em] text-white/45">{card.category}</div>
@@ -182,7 +188,7 @@ export default function AdminPage() {
           </div>
         </article>
 
-        <article className="afrika-admin-panel p-6">
+        <article className="afrika-panel p-6">
           <SectionHeader
             eyebrow="AI pipeline dashboard"
             title="Track generation queues, moderation confidence, and failed jobs."
@@ -198,7 +204,7 @@ export default function AdminPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr_0.9fr]">
-        <article className="afrika-admin-panel p-6">
+        <article className="afrika-panel p-6">
           <SectionHeader
             eyebrow="Analytics experience"
             title="Geographic activity, save behavior, and category momentum become visible."
@@ -220,7 +226,7 @@ export default function AdminPage() {
           </div>
         </article>
 
-        <article className="afrika-admin-panel p-6">
+        <article className="afrika-panel p-6">
           <SectionHeader
             eyebrow="Feed control system"
             title="Editorial controls for trend boosting and regional prioritization."
@@ -234,7 +240,7 @@ export default function AdminPage() {
           </div>
         </article>
 
-        <article className="afrika-admin-panel p-6">
+        <article className="afrika-panel p-6">
           <SectionHeader
             eyebrow="Verification and trust"
             title="Human validation keeps the ecosystem authentic."
@@ -254,7 +260,7 @@ export default function AdminPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <article className="afrika-admin-panel p-6">
+        <article className="afrika-panel p-6">
           <SectionHeader
             eyebrow="Human intelligence"
             title="Editorial context and contributor quality sit beside the autonomous graph."
@@ -267,7 +273,7 @@ export default function AdminPage() {
           </div>
         </article>
 
-        <article className="afrika-admin-panel p-6">
+        <article className="afrika-panel p-6">
           <SectionHeader
             eyebrow="Operational intelligence"
             title="Ambient, temporal, and continental views stay visible in one place."
@@ -278,6 +284,88 @@ export default function AdminPage() {
             <QueueRow title="City pulse" detail={`${ambient.cityPulse[0]?.city} - ${ambient.cityPulse[0]?.bestWindow}`} tone="good" />
             <QueueRow title="Personal OS" detail={`${personalOS.routines.length} adaptive routines are active.`} tone="good" />
             <QueueRow title="Continental view" detail={`${continental.length} regions tracked with localized personality layers.`} tone="good" />
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <article className="afrika-panel p-6">
+          <SectionHeader
+            eyebrow="Stage 8 world model"
+            title="Cities, behavior, and environment are now tracked as a living simulation layer."
+            description="This is the operational view of the autonomous world model that feeds predictive reality and digital twins."
+          />
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <MetricTile label="World model signals" value={`${stage8.worldModel.length}`} detail="Neighborhood, culture, behavior, and environment." />
+            <MetricTile label="Digital twins" value={`${stage8.digitalTwins.length}`} detail="City pulse and future state layers." />
+            <MetricTile label="Simulation nodes" value={`${stage8.orchestration.coordinationGraph.nodes}`} detail="Cross-graph reasoning and memory layers." />
+            <MetricTile label="Predictive reality" value={`${stage8.predictiveReality.length}`} detail="Forecasts for urban, cultural, and tourism shifts." />
+          </div>
+          <div className="mt-5 space-y-3">
+            <QueueRow title="Agent coordination" detail={stage8.orchestration.summary} tone="good" />
+            <QueueRow title="Learning loops" detail={stage8.selfEvolving.summary} tone="good" />
+            <QueueRow title="Simulation layer" detail={stage8.simulations[0]?.outcome ?? "Simulation outputs are warming up."} tone="good" />
+          </div>
+        </article>
+
+        <article className="afrika-panel p-6">
+          <SectionHeader
+            eyebrow="AI agent oversight"
+            title="Discovery agents explore culture, food, opportunities, and tourism continuously."
+            description="Autonomous agents now coordinate through the shared world model rather than operating in isolation."
+          />
+          <div className="mt-5 space-y-3">
+            {stage8.orchestration.agents.map((agent) => (
+              <QueueRow
+                key={agent.id}
+                title={agent.type.toUpperCase()}
+                detail={`${agent.focus} · ${agent.status} · autonomy ${agent.autonomyLevel.toFixed(2)}`}
+                tone="good"
+              />
+            ))}
+          </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <MetricTile label="Multimodal cards" value={`${stage8.multimodal.length}`} detail="Visual, spatial, behavioral, and linguistic reads." />
+            <MetricTile label="Collective behavior" value={`${stage8.collectiveBehavior.length}`} detail="Regional movement and trend spread layers." />
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <article className="afrika-panel p-6">
+          <SectionHeader
+            eyebrow="Stage 9 civilizational intelligence"
+            title="Historical memory, future forecasts, and continuity systems now work as one living layer."
+            description="The observatory keeps African life legible across time without exposing raw complexity."
+          />
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <MetricTile label="Memory entries" value={`${stage9.civilizationalMemory.length}`} detail="Neighborhoods, stories, traditions, and change." />
+            <MetricTile label="Forecasts" value={`${stage9.futureForecasts.length}`} detail="Future cultural and urban trajectories." />
+            <MetricTile label="Generational layers" value={`${stage9.generationalIntelligence.length}`} detail="How behavior shifts across age groups." />
+            <MetricTile label="Global network" value={`${stage9.globalAfricanNetwork.length}`} detail="Diaspora influence and cultural diffusion." />
+          </div>
+          <div className="mt-5 space-y-3">
+            <QueueRow title="Historical graph" detail={stage9.historicalGraph.summary} tone="good" />
+            <QueueRow title="Continuity" detail={stage9.continuity.summary} tone="good" />
+            <QueueRow title="Knowledge evolution" detail={stage9.knowledgeEvolution[0]?.update ?? "Learning loops are active."} tone="good" />
+          </div>
+        </article>
+
+        <article className="afrika-panel p-6">
+          <SectionHeader
+            eyebrow="Cultural preservation AI"
+            title="Living memory keeps language, rituals, architecture, and evolving identity in view."
+            description="Preservation is treated as continuity, not an archive."
+          />
+          <div className="mt-5 space-y-3">
+            {stage9.preservationAI.map((item) => (
+              <QueueRow
+                key={item.id}
+                title={item.preserveAs}
+                detail={`${item.summary} Urgency ${item.urgency}.`}
+                tone={item.urgency === "high" ? "warn" : "good"}
+              />
+            ))}
           </div>
         </article>
       </section>

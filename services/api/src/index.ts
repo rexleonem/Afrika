@@ -206,6 +206,11 @@ app.get("/stage8", async () => ({
   summary: "Living world model and simulation layer for African reality."
 }));
 
+app.get("/stage9", async () => ({
+  stage9: store.stage9System,
+  summary: "Civilizational intelligence layer for African memory, synthesis, and continuity."
+}));
+
 app.get("/freshness", async () => ({
   items: store.cards.map((card) => ({
     id: card.id,

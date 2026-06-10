@@ -8,6 +8,7 @@ import { buildHumanIntelligenceLayer, generateCulturalStories } from "@afrika/sh
 import { buildActionLayer } from "@afrika/shared/stage5";
 import { buildAmbientIntelligence } from "@afrika/shared/stage6";
 import { buildStage8WorldModel } from "@afrika/shared/stage8";
+import { buildStage9CivilizationalIntelligenceSystem } from "@afrika/shared/stage9";
 import { DiscoveryCard, InsightRow, MetricTile, SectionHeader } from "../components/primitives";
 import { TrendCard, NeighborhoodCard } from "../components/cards/discovery-card";
 import { AIInsightPanel, ContextPanel } from "../components/panels/ai-insight-panel";
@@ -26,6 +27,7 @@ const culturalStories = generateCulturalStories(featuredCards, []);
 const actionLayer = buildActionLayer(featuredCards);
 const ambientIntelligence = buildAmbientIntelligence(featuredCards, "2026-06-09T19:00:00.000Z");
 const stage8 = buildStage8WorldModel(featuredCards);
+const stage9 = buildStage9CivilizationalIntelligenceSystem(featuredCards);
 const predictiveHighlights = predictDiscovery(featuredCards, behavioralProfile, cityIntelligence);
 const trendQuery = interpretSearch("trending places in Lagos this week");
 const feedHighlights = featuredCards.map((card) => ({
@@ -597,6 +599,22 @@ export default function HomePage() {
           <MetricTile label="Discovery agents" value={`${stage8.orchestration.agents.length}`} detail="Culture, food, tourism, opportunity." />
           <MetricTile label="Simulations" value={`${stage8.simulations.length}`} detail="Regional futures and movement patterns." />
           <MetricTile label="World model" value={stage8.worldModel[0]?.city ?? "Africa"} detail="Neighborhood, behavior, and environment." />
+        </div>
+      </section>
+
+      <section className="px-4 sm:px-8 lg:px-12 mt-20">
+        <ScrollReveal>
+          <SectionHeader
+            eyebrow="Civilizational memory"
+            title="AFRIKA now carries a living memory of African civilization across time."
+            description="Stage 9 synthesizes history, culture, generational shifts, and future continuity without exposing raw archival complexity."
+          />
+        </ScrollReveal>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <MetricTile label="Memory records" value={`${stage9.civilizationalMemory.length}`} detail="Preserved city and cultural memory." />
+          <MetricTile label="Forecasts" value={`${stage9.futureForecasts.length}`} detail="Future cultural trajectories." />
+          <MetricTile label="Generations" value={`${stage9.generationalIntelligence.length}`} detail="Youth to intergenerational intelligence." />
+          <MetricTile label="Global network" value={`${stage9.globalAfricanNetwork.length}`} detail="Diaspora and cross-continental diffusion." />
         </div>
       </section>
 
