@@ -7,6 +7,7 @@ import { buildCityIntelligence, inferBehavioralProfile, predictDiscovery } from 
 import { buildHumanIntelligenceLayer, generateCulturalStories } from "@afrika/shared/stage4";
 import { buildActionLayer } from "@afrika/shared/stage5";
 import { buildAmbientIntelligence } from "@afrika/shared/stage6";
+import { buildStage8WorldModel } from "@afrika/shared/stage8";
 import { DiscoveryCard, InsightRow, MetricTile, SectionHeader } from "../components/primitives";
 import { TrendCard, NeighborhoodCard } from "../components/cards/discovery-card";
 import { AIInsightPanel, ContextPanel } from "../components/panels/ai-insight-panel";
@@ -24,6 +25,7 @@ const behavioralProfile = inferBehavioralProfile(featuredCards, [
 const culturalStories = generateCulturalStories(featuredCards, []);
 const actionLayer = buildActionLayer(featuredCards);
 const ambientIntelligence = buildAmbientIntelligence(featuredCards, "2026-06-09T19:00:00.000Z");
+const stage8 = buildStage8WorldModel(featuredCards);
 const predictiveHighlights = predictDiscovery(featuredCards, behavioralProfile, cityIntelligence);
 const trendQuery = interpretSearch("trending places in Lagos this week");
 const feedHighlights = featuredCards.map((card) => ({
@@ -579,6 +581,22 @@ export default function HomePage() {
               </div>
             </ScrollReveal>
           ))}
+        </div>
+      </section>
+
+      <section className="px-4 sm:px-8 lg:px-12 mt-20">
+        <ScrollReveal>
+          <SectionHeader
+            eyebrow="World model"
+            title="AFRIKA now reads Africa as a living simulation of movement, culture, and opportunity."
+            description="Stage 8 adds digital twins, predictive reality, and autonomous discovery agents to the live graph."
+          />
+        </ScrollReveal>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <MetricTile label="Cities modeled" value={`${stage8.digitalTwins.length}`} detail="Living city twin layers." />
+          <MetricTile label="Discovery agents" value={`${stage8.orchestration.agents.length}`} detail="Culture, food, tourism, opportunity." />
+          <MetricTile label="Simulations" value={`${stage8.simulations.length}`} detail="Regional futures and movement patterns." />
+          <MetricTile label="World model" value={stage8.worldModel[0]?.city ?? "Africa"} detail="Neighborhood, behavior, and environment." />
         </div>
       </section>
 

@@ -201,6 +201,11 @@ app.get("/stage7", async () => ({
   summary: "Self-optimizing intelligence network for scaling African discovery."
 }));
 
+app.get("/stage8", async () => ({
+  stage8: store.stage8System,
+  summary: "Living world model and simulation layer for African reality."
+}));
+
 app.get("/freshness", async () => ({
   items: store.cards.map((card) => ({
     id: card.id,
