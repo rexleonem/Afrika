@@ -57,7 +57,7 @@ export type MultimodalInsight = {
 export type PredictiveRealityForecast = {
   label: string;
   city: string;
-  horizon: "near" | "mid" | "far";
+  horizon: "now" | "soon" | "later";
   prediction: string;
   confidence: number;
 };
