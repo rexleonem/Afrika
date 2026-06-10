@@ -413,7 +413,7 @@ export default function HomePage() {
         <StaggerContainer className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {predictiveHighlights.map((item, i) => (
             <motion.div key={item.card.id} variants={staggerItem}>
-              <Link href={`/discover/${item.card.id}`}>
+              <Link href={`/discover/${item.card.id}` as `/discover/${string}`}>
                 <div
                   className="rounded-[24px] p-5 h-full group transition-all duration-300"
                   style={{
