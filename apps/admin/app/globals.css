@@ -419,7 +419,7 @@ img, video {
   }
 
   .afrika-chip-gold {
-    @apply afrika-chip;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-solid px-3 py-1.5 text-xs font-medium transition;
     background: rgba(210, 166, 109, 0.12);
     border-color: rgba(210, 166, 109, 0.25);
     color: var(--accent-gold);
@@ -495,19 +495,25 @@ img, video {
   }
 
   .glow-orb-gold {
-    @apply glow-orb;
+    @apply absolute rounded-full pointer-events-none;
+    filter: blur(80px);
+    animation: float 8s ease-in-out infinite;
     background: radial-gradient(circle, rgba(210, 166, 109, 0.28) 0%, transparent 70%);
   }
 
   .glow-orb-forest {
-    @apply glow-orb;
+    @apply absolute rounded-full pointer-events-none;
+    filter: blur(80px);
+    animation: float 8s ease-in-out infinite;
     background: radial-gradient(circle, rgba(109, 139, 125, 0.20) 0%, transparent 70%);
     animation-delay: -3s;
     animation-duration: 10s;
   }
 
   .glow-orb-clay {
-    @apply glow-orb;
+    @apply absolute rounded-full pointer-events-none;
+    filter: blur(80px);
+    animation: float 8s ease-in-out infinite;
     background: radial-gradient(circle, rgba(193, 123, 88, 0.18) 0%, transparent 70%);
     animation-delay: -5s;
     animation-duration: 12s;
