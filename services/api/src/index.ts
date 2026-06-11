@@ -105,7 +105,7 @@ app.get("/health", async () => ({ ok: true, service: "afrika-api" }));
 
 app.get("/auth/session", async (request, reply) => {
   const user = await resolveCurrentUser(request);
-  if (!user) return reply.code(401).send({ authenticated: false, user: null });
+  if (!user) return authCookieHeaders(reply).send({ authenticated: false, user: null });
   return { authenticated: true, user: sanitizeUser(user), token: undefined };
 });
 
@@ -142,7 +142,7 @@ app.post("/auth/register", async (request, reply) => {
   }));
 
   setSessionCookie(reply, user.id);
-  return reply.code(201).send({ user: sanitizeUser(user), token: createSessionToken(user.id) });
+  return reply.code(201).send({ authenticated: true, user: sanitizeUser(user), token: createSessionToken(user.id) });
 });
 
 app.post("/auth/login", async (request, reply) => {

@@ -43,6 +43,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<SessionState["status"]>("loading");
   const [user, setUser] = useState<SessionUser | null>(null);
 
+  function readToken() {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem("afrika_session_token");
+  }
+
   function persistToken(token?: string) {
     if (typeof window === "undefined") return;
     if (token) {
@@ -54,9 +59,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    const tokenAtRequestStart = readToken();
+
     apiFetch<AuthResponse>("/auth/session", { method: "GET" })
       .then((response) => {
         if (!active) return;
+        if (readToken() !== tokenAtRequestStart) return;
         setUser(response.user);
         setStatus(response.authenticated ? "authenticated" : "anonymous");
         if (response.authenticated) {
@@ -67,6 +75,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         if (!active) return;
+        if (readToken() !== tokenAtRequestStart) return;
         setUser(null);
         setStatus("anonymous");
         persistToken(undefined);

@@ -59,10 +59,12 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    const tokenAtRequestStart = readAdminToken();
 
     apiFetch<AuthResponse>("/auth/session", { method: "GET" })
       .then((response) => {
         if (!active) return;
+        if (readAdminToken() !== tokenAtRequestStart) return;
         if (response.authenticated && response.user?.role === "admin") {
           setUser(response.user);
           setStatus("authenticated");
@@ -76,6 +78,7 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         if (!active) return;
+        if (readAdminToken() !== tokenAtRequestStart) return;
         setUser(null);
         setStatus("anonymous");
         persistToken(undefined);
