@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useTheme } from "./theme-provider";
+import { useSession } from "./session-provider";
 
 const navItems = [
   {
@@ -60,6 +61,7 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { theme, toggle } = useTheme();
+  const { status, user, signOut } = useSession();
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -194,6 +196,45 @@ export function Sidebar() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {expanded && (
+              <div
+                className="rounded-2xl p-3 mb-2"
+                style={{
+                  background: "var(--bg-glass-light)",
+                  border: "1px solid var(--border-subtle)"
+                }}
+              >
+                <div className="text-[0.62rem] uppercase tracking-[0.38em] mb-1.5" style={{ color: "var(--text-muted)" }}>
+                  Account
+                </div>
+                {status === "authenticated" && user ? (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                      {user.name}
+                    </div>
+                    <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      {user.email}
+                    </div>
+                    <button
+                      onClick={() => void signOut()}
+                      className="btn-secondary w-full justify-center text-xs"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs leading-5" style={{ color: "var(--text-secondary)" }}>
+                      Sign in to save plans, personalize discovery, and keep your profile in sync.
+                    </p>
+                    <Link href={"/sign-in" as const} className="btn-primary w-full justify-center text-xs">
+                      Sign in
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Theme toggle */}
             <button

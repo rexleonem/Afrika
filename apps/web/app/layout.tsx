@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import { ThemeProvider } from "../components/theme-provider";
+import { SessionProvider } from "../components/session-provider";
 import { Sidebar, MobileNav } from "../components/sidebar";
 import { PullToRefresh } from "../components/motion/pull-to-refresh";
 import "./globals.css";
@@ -58,21 +59,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <body className="overscroll-none">
         <ThemeProvider>
-          {/* Desktop sidebar */}
-          <Sidebar />
+          <SessionProvider>
+            {/* Desktop sidebar */}
+            <Sidebar />
 
-          {/* Main content — offset by sidebar width on desktop */}
-          <div
-            className="min-h-screen lg:pl-[92px]"
-            style={{ transition: "padding 0.35s cubic-bezier(0.16, 1, 0.3, 1)" }}
-          >
-            <PullToRefresh>
-              {children}
-            </PullToRefresh>
-          </div>
+            {/* Main content — offset by sidebar width on desktop */}
+            <div
+              className="min-h-screen lg:pl-[92px]"
+              style={{ transition: "padding 0.35s cubic-bezier(0.16, 1, 0.3, 1)" }}
+            >
+              <PullToRefresh>{children}</PullToRefresh>
+            </div>
 
-          {/* Mobile bottom nav */}
-          <MobileNav />
+            {/* Mobile bottom nav */}
+            <MobileNav />
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

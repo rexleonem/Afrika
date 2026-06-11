@@ -19,6 +19,8 @@ export type ApiUser = {
   name: string;
   role: ApiUserRole;
   imageUrl?: string;
+  passwordHash?: string;
+  passwordSalt?: string;
   createdAt: string;
   updatedAt: string;
   preferences: {

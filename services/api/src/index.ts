@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
-import Fastify from "fastify";
+import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
 import { interpretSearch, scoreCardTotal } from "@afrika/shared/stage2";
 import type { AFRIKACard, AFRIKAPlan, PlanItem } from "@afrika/shared/types";
 import { buildStore } from "./store.js";
 import { createCardFromInput, readState, sortCards, writeState } from "./repository.js";
 import type { ApiState, SearchHistoryRecord, StoredCard } from "./types.js";
+import { clearSessionCookie, hashPassword, readSessionUserId, sanitizeUser, setSessionCookie, verifyPassword } from "./auth.js";
 
 const app = Fastify({ logger: true });
 
@@ -82,7 +83,86 @@ function buildSearchHistoryRecord(query: string, interpretation: ReturnType<type
   };
 }
 
+async function resolveCurrentUser(request: FastifyRequest) {
+  const userId = readSessionUserId(request);
+  if (!userId) return null;
+  const { state } = await getRuntimeState();
+  return state.users.find((user) => user.id === userId) ?? null;
+}
+
+function authCookieHeaders(reply: FastifyReply) {
+  reply.header("Cache-Control", "no-store");
+  return reply;
+}
+
 app.get("/health", async () => ({ ok: true, service: "afrika-api" }));
+
+app.get("/auth/session", async (request, reply) => {
+  const user = await resolveCurrentUser(request);
+  if (!user) return reply.code(401).send({ authenticated: false, user: null });
+  return { authenticated: true, user: sanitizeUser(user) };
+});
+
+app.post("/auth/register", async (request, reply) => {
+  const body = request.body as { email?: string; password?: string; name?: string };
+  if (!body.email?.trim() || !body.password?.trim()) {
+    return reply.code(400).send({ error: "Email and password are required." });
+  }
+
+  const { state } = await getRuntimeState();
+  if (state.users.some((user) => user.email.toLowerCase() === body.email!.trim().toLowerCase())) {
+    return reply.code(409).send({ error: "User already exists." });
+  }
+
+  const { salt, hash } = hashPassword(body.password);
+  const user = {
+    id: randomUUID(),
+    email: body.email.trim().toLowerCase(),
+    name: body.name?.trim() || body.email.split("@")[0] || "AFRIKA Member",
+    role: "user" as const,
+    passwordHash: hash,
+    passwordSalt: salt,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    preferences: {
+      preferredCities: [],
+      interests: []
+    }
+  };
+
+  await writeState((current) => ({
+    ...current,
+    users: [user, ...current.users]
+  }));
+
+  setSessionCookie(reply, user.id);
+  return reply.code(201).send({ user: sanitizeUser(user) });
+});
+
+app.post("/auth/login", async (request, reply) => {
+  const body = request.body as { email?: string; password?: string };
+  if (!body.email?.trim() || !body.password?.trim()) {
+    return reply.code(400).send({ error: "Email and password are required." });
+  }
+
+  const { state } = await getRuntimeState();
+  const user = state.users.find((item) => item.email.toLowerCase() === body.email!.trim().toLowerCase());
+  if (!user?.passwordHash || !user.passwordSalt) {
+    return reply.code(401).send({ error: "Invalid credentials." });
+  }
+
+  if (!verifyPassword(body.password, user.passwordSalt, user.passwordHash)) {
+    return reply.code(401).send({ error: "Invalid credentials." });
+  }
+
+  setSessionCookie(reply, user.id);
+  return { authenticated: true, user: sanitizeUser(user) };
+});
+
+app.post("/auth/logout", async (_request, reply) => {
+  clearSessionCookie(reply);
+  return { ok: true, loggedOut: true };
+});
 
 app.get("/feed", async (request) => {
   const city = String((request.query as { city?: string }).city ?? "").trim().toLowerCase();
@@ -768,14 +848,14 @@ app.delete("/sources/:id", async (request, reply) => {
 app.get("/users", async () => {
   const { state } = await getRuntimeState();
   return {
-    items: state.users,
+    items: state.users.map((user) => sanitizeUser(user)),
     total: state.users.length
   };
 });
 
-app.get("/profiles/me", async () => {
-  const { state } = await getRuntimeState();
-  return state.users[0] ?? null;
+app.get("/profiles/me", async (request) => {
+  const user = await resolveCurrentUser(request);
+  return user ? sanitizeUser(user) : null;
 });
 
 app.patch("/users/:id", async (request, reply) => {

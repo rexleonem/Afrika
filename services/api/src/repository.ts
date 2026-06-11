@@ -6,6 +6,7 @@ import { freshnessStatus, scoreCardTotal } from "@afrika/shared/stage2";
 import type { AFRIKACard } from "@afrika/shared/types";
 import { enrichCard } from "@afrika/shared/stage2";
 import type { ApiState, StoredCard } from "./types.js";
+import { hashPassword } from "./auth.js";
 
 const stateFile = resolve(process.cwd(), process.env.API_STATE_FILE ?? "data/api-state.json");
 
@@ -72,6 +73,7 @@ function buildSeedState(): ApiState {
         email: "admin@afrika.local",
         name: "AFRIKA Admin",
         role: "admin",
+        ...hashPassword(process.env.DEFAULT_ADMIN_PASSWORD ?? "afrika-demo-password"),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         preferences: {
