@@ -8,7 +8,7 @@ import { useSession } from "../../components/session-provider";
 export default function SignInPage() {
   const router = useRouter();
   const { signIn } = useSession();
-  const [email, setEmail] = useState("admin@afrika.local");
+  const [email, setEmail] = useState("demo@afrika.local");
   const [password, setPassword] = useState(process.env.NEXT_PUBLIC_DEMO_PASSWORD ?? "afrika-demo-password");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
