@@ -69,6 +69,19 @@ function buildSeedState(): ApiState {
     ],
     users: [
       {
+        id: "user-demo",
+        email: "demo@afrika.local",
+        name: "AFRIKA Member",
+        role: "user",
+        ...hashPassword(process.env.DEFAULT_DEMO_PASSWORD ?? "afrika-demo-password"),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        preferences: {
+          preferredCities: ["Lagos", "Accra", "Nairobi"],
+          interests: ["discovery", "culture", "food"]
+        }
+      },
+      {
         id: "user-admin",
         email: "admin@afrika.local",
         name: "AFRIKA Admin",

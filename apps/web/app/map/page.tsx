@@ -286,7 +286,7 @@ export default function MapPage() {
 
           {/* Right intelligence panel */}
           <ContextPanel className="xl:sticky xl:top-6 xl:h-fit">
-            <AIInsightPanel title="Temporal intelligence">
+            <AIInsightPanel title="Temporal rhythm">
               <div className="space-y-2">
                 {temporal.map((slot) => (
                   <InsightRow key={slot.label} title={slot.label} detail={slot.recommendation} accent />
@@ -294,7 +294,7 @@ export default function MapPage() {
               </div>
             </AIInsightPanel>
 
-            <AIInsightPanel title="Environmental signals" live>
+            <AIInsightPanel title="Environmental rhythm" live>
               <div className="space-y-2">
                 <InsightRow
                   title="Weather"

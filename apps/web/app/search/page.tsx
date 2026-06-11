@@ -20,7 +20,7 @@ type LiveCard = (typeof featuredCards)[number];
 const SUGGESTIONS = [
   "Quiet places to work in Lagos",
   "Weekend escapes under 2 hours",
-  "Creative hubs in Nairobi",
+  "Where the work crowd actually goes in Nairobi",
   "Best calm places right now",
   "Emerging neighborhoods in Accra"
 ];
@@ -78,7 +78,7 @@ export default function SearchPage() {
         <AmbientGlow variant="forest" size="md" className="bottom-0 left-[5%]" opacity={0.25} animationDelay="-3s" />
         <div className="relative z-10 max-w-3xl space-y-6">
           <div className="flex flex-wrap gap-2">
-            {["AI-powered exploration", "Semantic search", "Map-aware results"].map((chip) => (
+            {["Ask Nommo", "Semantic search", "Map-aware results"].map((chip) => (
               <span key={chip} className="afrika-chip">
                 {chip}
               </span>
@@ -146,20 +146,20 @@ export default function SearchPage() {
           </div>
 
           <ContextPanel className="xl:sticky xl:top-6 xl:h-fit">
-            <AIInsightPanel title="AI explanation">
+            <AIInsightPanel title="Nommo reading">
               <p className="text-xs leading-5 text-white/65">
                 {parsed.rankingHint} The system combines semantic intent, geo relevance, freshness, and the ambient city pulse.
               </p>
             </AIInsightPanel>
 
-            <AIInsightPanel title="Intelligence" live>
+            <AIInsightPanel title="City pulse" live>
               <div className="space-y-2">
                 <InsightRow title="Temporal cue" detail={ambientIntelligence.temporalSignals[0]?.recommendation ?? "Timing-aware results."} accent />
                 <InsightRow title={leadingCity?.city ?? "Lagos"} detail={`Momentum ${leadingCity?.trendMomentum ?? 0} · Density ${leadingCity?.discoveryDensity ?? 0}`} accent />
               </div>
             </AIInsightPanel>
 
-            <AIInsightPanel title="Predictive matches">
+            <AIInsightPanel title="Likely next steps">
               <div className="space-y-2">
                 {predictiveResults.slice(0, 3).map((item) => (
                   <InsightRow key={item.card.id} title={item.card.title} detail={item.reason} />
@@ -168,7 +168,7 @@ export default function SearchPage() {
             </AIInsightPanel>
 
             <AIInsightPanel title="Cultural context">
-              <p className="mb-3 text-xs leading-5 text-white/65">{culturalStories[0]?.summary ?? "Cultural intelligence appears here."}</p>
+              <p className="mb-3 text-xs leading-5 text-white/65">{culturalStories[0]?.summary ?? "Local context appears here once the results settle."}</p>
               <div className="flex flex-wrap gap-2">
                 <Link href="/map" className="afrika-chip text-xs">
                   Open map

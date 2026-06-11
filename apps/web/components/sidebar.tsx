@@ -174,7 +174,7 @@ export function Sidebar() {
 
           {/* Bottom section */}
           <div className="px-3 pb-4 space-y-1">
-            {/* AI assistant entry */}
+            {/* Nommo entry */}
             <AnimatePresence>
               {expanded && (
                 <motion.div
@@ -188,10 +188,10 @@ export function Sidebar() {
                   }}
                 >
                   <div className="text-[0.62rem] uppercase tracking-[0.38em] mb-1.5" style={{ color: "var(--accent-gold)" }}>
-                    Intelligence
+                    Nommo
                   </div>
                   <p className="text-xs leading-5" style={{ color: "var(--text-secondary)" }}>
-                    Ask AFRIKA anything about African cities, places &amp; culture.
+                    Ask for the version locals would actually recommend.
                   </p>
                 </motion.div>
               )}

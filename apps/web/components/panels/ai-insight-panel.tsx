@@ -7,7 +7,7 @@ type AIPanelProps = {
   className?: string;
 };
 
-export function AIInsightPanel({ title = "Intelligence", children, live, className = "" }: AIPanelProps) {
+export function AIInsightPanel({ title = "Nommo", children, live, className = "" }: AIPanelProps) {
   return (
     <div
       className={`rounded-[28px] p-5 ${className}`}

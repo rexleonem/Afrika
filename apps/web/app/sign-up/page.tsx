@@ -22,7 +22,7 @@ export default function SignUpPage() {
             <span className="afrika-chip">Sign up</span>
             <span className="afrika-chip">AFRIKA account</span>
           </div>
-          <h1 className="afrika-hero-title text-3xl">Create your AFRIKA account</h1>
+          <h1 className="afrika-hero-title text-3xl">Set up your AFRIKA account</h1>
           <p className="mt-3 text-sm leading-6 text-white/65">
             Create a real session so your profile, plans, and saved discoveries can persist.
           </p>

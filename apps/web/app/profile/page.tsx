@@ -92,7 +92,7 @@ export default function ProfilePage() {
               <span className="afrika-chip">Profile</span>
               <span className="afrika-chip">Session required</span>
             </div>
-            <h1 className="afrika-hero-title text-3xl">Sign in to unlock your profile</h1>
+            <h1 className="afrika-hero-title text-3xl">Sign in to see your saved work</h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-white/65">
               Your saved plans, recent searches, and discovery history will appear here once you sign in.
             </p>
@@ -131,7 +131,7 @@ export default function ProfilePage() {
               Your account now reflects real saved history, real plans, and real discovery signals.
             </h1>
             <p className="max-w-2xl text-sm leading-7 text-white/65">
-              This profile is now connected to the live API rather than a static placeholder. Session data, plans, and search behavior are loaded from the backend.
+              This profile is connected to live session data, saved plans, and recent searches from the backend.
             </p>
             <div className="flex flex-wrap gap-3">
               <button className="btn-secondary" onClick={() => void signOut()}>
@@ -157,8 +157,8 @@ export default function ProfilePage() {
             <ScrollReveal>
               <SectionHeader
                 eyebrow="Profile intelligence"
-                title="Your taste profile becomes a map of what you naturally explore."
-                description="The screen now reflects live session data instead of placeholder seed content."
+                title="Your profile reads like the places you return to."
+                description="The screen reflects live session data instead of seed content."
               />
               <div className="mt-5 flex flex-wrap gap-2">
                 {interestTags.map((tag) => (
@@ -168,7 +168,7 @@ export default function ProfilePage() {
             </ScrollReveal>
 
             <ScrollReveal>
-              <SectionHeader eyebrow="Saved plans" title="What you’re actively organizing." />
+              <SectionHeader eyebrow="Saved plans" title="What you’re actively putting together." />
               <div className="mt-5 grid gap-3">
                 {plans.length > 0 ? (
                   plans.map((plan) => (
@@ -196,7 +196,7 @@ export default function ProfilePage() {
             </ScrollReveal>
 
             <ScrollReveal>
-              <SectionHeader eyebrow="Recent searches" title="What you’ve been asking Afrika." />
+              <SectionHeader eyebrow="Recent searches" title="What you’ve been asking Nommo." />
               <div className="mt-5 space-y-3">
                 {history.length > 0 ? (
                   history.slice(0, 5).map((entry) => (
@@ -217,7 +217,7 @@ export default function ProfilePage() {
             </ScrollReveal>
 
             <ScrollReveal>
-              <SectionHeader eyebrow="Saved discoveries" title="Cards backed by the live API." />
+              <SectionHeader eyebrow="Saved discoveries" title="Cards backed by live data." />
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 {savedCards.length > 0 ? (
                   savedCards.map((card) => (
@@ -239,7 +239,7 @@ export default function ProfilePage() {
           </div>
 
           <ContextPanel className="xl:sticky xl:top-6 xl:h-fit">
-            <AIInsightPanel title="Account intelligence" live>
+            <AIInsightPanel title="Account reading" live>
               <InsightRow title="Identity" detail={`${user.name} · ${user.role}`} accent />
               <InsightRow title="Session" detail="Connected to the API-backed auth flow." accent />
               <InsightRow title="Sync" detail="Plans, cards, and searches load from live state." accent />
@@ -247,7 +247,7 @@ export default function ProfilePage() {
 
             <AIInsightPanel title="Profile summary">
               <p className="text-xs leading-5 text-white/65">
-                The profile page now reads actual session state from AFRIKA’s API rather than a static demo shell.
+                The profile page now reads actual session state rather than a static seed shell.
               </p>
             </AIInsightPanel>
           </ContextPanel>

@@ -18,9 +18,9 @@ export default function OverviewPage() {
               <span className="afrika-chip">Multi-stage intelligence</span>
             </div>
             <div className="afrika-label">Overview</div>
-            <h1 className="afrika-hero-title max-w-3xl text-4xl">A real operational surface for AFRIKA, not a placeholder shell.</h1>
+            <h1 className="afrika-hero-title max-w-3xl text-4xl">A real operational surface for AFRIKA, not a blank shell.</h1>
             <p className="max-w-2xl text-sm leading-7 text-white/65 sm:text-base">
-              The admin now reads from the live API, enforces admin access, and exposes multi-page operations for ingestion, AI, analytics, and trust.
+              The admin now reads from the live API, enforces admin access, and exposes multi-page operations for ingestion, model work, analytics, and trust.
             </p>
             <div className="flex flex-wrap gap-2">
               <SignalBadge label="Cards" value={snapshot?.overview.cardsInGraph ?? 0} />
@@ -66,7 +66,7 @@ export default function OverviewPage() {
           />
           <div className="mt-5 space-y-3">
             <QueueRow title="Ingestion" detail="Source reliability, crawler health, and blocked sources." tone="good" />
-            <QueueRow title="AI pipeline" detail="Prompt versions, model arbitration, and consistency rules." tone="good" />
+            <QueueRow title="Model pipeline" detail="Prompt versions, model arbitration, and consistency rules." tone="good" />
             <QueueRow title="Analytics" detail="Search, trends, and user behavior flows." tone="good" />
             <QueueRow title="Trust" detail="Contributors, moderation, and verification confidence." tone="warn" />
           </div>
@@ -78,7 +78,7 @@ export default function OverviewPage() {
           <SectionHeader
             eyebrow="Live content"
             title="The top cards are now visible as operational objects."
-            description="Use these records to verify that the API, not a placeholder list, powers the dashboard."
+            description="Use these records to verify that the API, not a seed list, powers the dashboard."
           />
           <div className="mt-5 grid gap-3">
             {snapshot?.cards.slice(0, 4).map((card) => (

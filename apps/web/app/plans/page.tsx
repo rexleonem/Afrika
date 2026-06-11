@@ -84,13 +84,13 @@ export default function PlansPage() {
               not forms.
             </h1>
             <p className="max-w-xl text-base leading-7 text-white/65">
-              Build weekend routes, cultural loops, or practical visit plans with intelligence that adapts to timing and environment.
+              Build weekend routes, cultural loops, or practical visit plans with timing and environment that make sense.
             </p>
           </motion.div>
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}>
             <AIInsightPanel title="Fulfillment signal" live>
               <div className="grid grid-cols-2 gap-3 mt-2">
-                <MetricTile label="Success rate" value={fallbackFulfillment.reservationSuccessRate.toFixed(2)} detail="Calm, invisible transactions." />
+                <MetricTile label="Success rate" value={fallbackFulfillment.reservationSuccessRate.toFixed(2)} detail="Calm, low-friction actions." />
                 <MetricTile label="Next action" value={fallbackActionLayer.actions[0]?.label ?? "Plan visit"} detail={fallbackActionLayer.intent.nextStepPrompt} />
               </div>
             </AIInsightPanel>

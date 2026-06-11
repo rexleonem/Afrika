@@ -10,12 +10,12 @@ export default function AiPage() {
     <div className="space-y-6">
       <section className="afrika-panel p-6">
         <SectionHeader
-          eyebrow="AI pipeline"
+          eyebrow="Nommo pipeline"
           title="Prompt versions, model arbitration, and consistency rules."
           description="This page is where the admin inspects how Gemini, DeepSeek, and Groq are coordinated."
         />
         <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <MetricTile label="Pending summaries" value={snapshot?.monitoring.ai.pendingSummaries ?? 0} detail="Queued AI jobs." />
+          <MetricTile label="Pending summaries" value={snapshot?.monitoring.ai.pendingSummaries ?? 0} detail="Queued model jobs." />
           <MetricTile label="Flagged outputs" value={snapshot?.monitoring.ai.flaggedOutputs ?? 0} detail="Outputs needing review." />
           <MetricTile label="Confidence floor" value={snapshot?.monitoring.ai.confidenceFloor?.toFixed(2) ?? "0.00"} detail="Minimum quality threshold." />
           <MetricTile label="Prompt versions" value={Object.keys(snapshot?.stage7.promptVersions ?? {}).length} detail="Versioned prompt inventory." />
@@ -27,7 +27,7 @@ export default function AiPage() {
           <SectionHeader eyebrow="Model arbitration" title="Structure, reason, and serve are visible as separate layers." />
           <div className="mt-5 space-y-3">
             {(snapshot?.stage7.arbitrationOrder ?? []).map((entry) => (
-              <QueueRow key={entry} title={entry} detail="Part of the coordinated AI pipeline." tone="good" />
+              <QueueRow key={entry} title={entry} detail="Part of the coordinated model pipeline." tone="good" />
             ))}
           </div>
         </article>

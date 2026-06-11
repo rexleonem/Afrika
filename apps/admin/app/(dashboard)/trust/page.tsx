@@ -38,7 +38,7 @@ export default function TrustPage() {
         </article>
 
         <article className="afrika-panel p-6">
-          <SectionHeader eyebrow="Verification" title="Human + AI verification queue." />
+          <SectionHeader eyebrow="Verification" title="Human + model verification queue." />
           <div className="mt-5 space-y-3">
             {snapshot?.verification.slice(0, 6).map((item) => (
               <QueueRow key={item.id} title={item.contributorName ?? item.id} detail={`${item.status} · confidence ${item.confidence.toFixed(2)}`} tone={item.status === "flagged" ? "warn" : "good"} />
@@ -53,7 +53,7 @@ export default function TrustPage() {
       </section>
 
       <section className="afrika-panel p-6">
-        <SectionHeader eyebrow="Cultural stories" title="Editorial narratives generated from local intelligence." />
+          <SectionHeader eyebrow="Cultural stories" title="Editorial narratives grounded in local intelligence." />
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           {snapshot?.stories.map((story) => (
             <div key={story.id} className="rounded-[22px] border border-white/10 bg-white/5 p-4">

@@ -194,8 +194,7 @@ export default function HomePage() {
               className="text-base leading-7 max-w-2xl sm:text-lg"
               style={{ color: "var(--text-secondary)" }}
             >
-              Premium discovery with AI insights, spatial context, and action paths that
-              feel calm, not transactional.
+              Premium discovery with local judgment, spatial context, and action paths that feel calm, not transactional.
             </p>
 
             {/* CTA row */}
@@ -273,8 +272,8 @@ export default function HomePage() {
         <ScrollReveal>
           <SectionHeader
             eyebrow="Editorial feed"
-            title="Immersive discoveries, AI-curated for context and clarity."
-            description="A visual rhythm of places, neighborhoods, and cultural signals with insight layered in."
+            title="Immersive discoveries, written with context and restraint."
+            description="A visual rhythm of places, neighborhoods, and cultural signals with useful judgment layered in."
             action={
               <Link href="/search" className="btn-secondary text-sm">
                 Browse all
@@ -307,7 +306,7 @@ export default function HomePage() {
                     card={card}
                     score={`Q ${card.quality.total}`}
                     highlight={card.intelligence.whyItMatters}
-                    cta="Open intelligence"
+                    cta="Open detail"
                   />
                 </motion.div>
               ))}
@@ -316,7 +315,7 @@ export default function HomePage() {
 
           {/* Right context panel */}
           <ContextPanel className="xl:sticky xl:top-6 xl:h-fit">
-            <AIInsightPanel title="Ambient briefing" live>
+            <AIInsightPanel title="Nommo briefing" live>
               <div
                 className="text-2xl font-semibold capitalize mb-2"
                 style={{
@@ -354,7 +353,7 @@ export default function HomePage() {
               </div>
             </AIInsightPanel>
 
-            <AIInsightPanel title="Intent engine">
+            <AIInsightPanel title="Intent reading">
               <InsightRow
                 title={actionLayer.intent.primaryIntent.replace(/-/g, " ")}
                 detail={actionLayer.intent.nextStepPrompt}
@@ -515,7 +514,7 @@ export default function HomePage() {
               <MetricTile
                 label="Freshness signal"
                 value={freshnessStatus(feedHighlights[0]?.quality.freshness ?? 0.8)}
-                detail="Cards decay when signal quality fades."
+                detail="Cards soften when the signal gets old."
               />
               <MetricTile
                 label="City intelligence"
@@ -525,7 +524,7 @@ export default function HomePage() {
               <MetricTile
                 label="Human layer"
                 value={`${humanLayer.cityIntelligence.length} cities`}
-                detail="Human context alongside AI structure."
+                detail="Local judgment alongside structured intelligence."
               />
               <MetricTile
                 label="Behavioral match"
@@ -542,7 +541,7 @@ export default function HomePage() {
         <ScrollReveal>
           <SectionHeader
             eyebrow="Cultural movements"
-            title="Editorial stories generated from the intelligence graph."
+            title="Editorial stories shaped from the intelligence graph."
             action={
               <Link href="/search" className="btn-secondary text-sm">
                 View all stories
@@ -594,7 +593,7 @@ export default function HomePage() {
         <ScrollReveal>
           <SectionHeader
             eyebrow="World model"
-            title="AFRIKA now reads Africa as a living simulation of movement, culture, and opportunity."
+            title="AFRIKA reads Africa as a living pattern of movement, culture, and opportunity."
             description="Stage 8 adds digital twins, predictive reality, and autonomous discovery agents to the live graph."
           />
         </ScrollReveal>
@@ -610,7 +609,7 @@ export default function HomePage() {
         <ScrollReveal>
           <SectionHeader
             eyebrow="Civilizational memory"
-            title="AFRIKA now carries a living memory of African civilization across time."
+            title="AFRIKA carries a living memory of African civilization across time."
             description="Stage 9 synthesizes history, culture, generational shifts, and future continuity without exposing raw archival complexity."
           />
         </ScrollReveal>
@@ -643,7 +642,7 @@ export default function HomePage() {
           <SectionHeader
             eyebrow="Reality orchestration"
             title="Discovery, movement, and opportunity now flow through an invisible coordination layer."
-            description="Stage 11 quietly balances the shape of discovery without making the interface feel busy or manipulative."
+            description="Stage 11 quietly balances discovery without making the interface feel busy or manipulative."
           />
         </ScrollReveal>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

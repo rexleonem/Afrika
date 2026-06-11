@@ -21,7 +21,7 @@ export default function SignInPage() {
             <span className="afrika-chip">Sign in</span>
             <span className="afrika-chip">AFRIKA account</span>
           </div>
-          <h1 className="afrika-hero-title text-3xl">Enter your AFRIKA account</h1>
+          <h1 className="afrika-hero-title text-3xl">Sign in to your AFRIKA account</h1>
           <p className="mt-3 text-sm leading-6 text-white/65">
             Sign in to sync your profile, saved places, and plans with the live API.
           </p>

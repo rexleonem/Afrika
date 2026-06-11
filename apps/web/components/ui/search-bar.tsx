@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const PLACEHOLDERS = [
-  "Quiet places to work in Lagos...",
-  "Weekend escapes near Accra...",
-  "Creative hubs in Nairobi...",
-  "Best evening spots in Abuja...",
-  "Hidden beaches in Cape Town...",
-  "Cultural markets in Dakar...",
+  "Need a quiet room in Lagos?",
+  "Looking for a slow weekend near Accra?",
+  "Where people actually work in Nairobi",
+  "A decent evening out in Abuja",
+  "Hidden water in Cape Town",
+  "Markets with real character in Dakar",
 ];
 
 type SearchBarProps = {
@@ -114,7 +114,7 @@ export function SearchBar({ value, onChange, suggestions = [], onSuggestion, cla
           )}
         </AnimatePresence>
 
-        {/* AI label */}
+        {/* Nommo label */}
         <span
           className="flex-shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-full"
           style={{
@@ -123,7 +123,7 @@ export function SearchBar({ value, onChange, suggestions = [], onSuggestion, cla
             color: "var(--accent-gold)",
           }}
         >
-          AI
+          Nommo
         </span>
       </motion.div>
 

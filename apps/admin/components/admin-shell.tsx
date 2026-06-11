@@ -11,7 +11,7 @@ const navItems = [
   { href: "/overview", label: "Overview" },
   { href: "/operations", label: "Operations" },
   { href: "/ingestion", label: "Ingestion" },
-  { href: "/ai", label: "AI Pipeline" },
+  { href: "/ai", label: "Nommo Pipeline" },
   { href: "/analytics", label: "Analytics" },
   { href: "/trust", label: "Trust" }
 ] as const;
@@ -67,7 +67,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <div className="space-y-2">
               <div className="afrika-label">AFRIKA admin</div>
               <div className="text-xl font-semibold text-white">Control room</div>
-              <p className="text-sm leading-6 text-white/55">Live operations, ingestion, AI, trust, and analytics.</p>
+              <p className="text-sm leading-6 text-white/55">Live operations, ingestion, model pipeline, trust, and analytics.</p>
             </div>
 
             <nav className="mt-8 space-y-2">
