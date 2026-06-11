@@ -15,7 +15,7 @@ const sources: IngestionSource[] = [
     id: "source-lagos-tourism",
     name: "Lagos Tourism Signals",
     kind: "tourism",
-    url: "https://example.com/lagos-tourism",
+    url: "https://www.tripadvisor.com",
     reliabilityScore: 0.82,
     active: true,
     crawlIntervalMinutes: 360
@@ -24,7 +24,7 @@ const sources: IngestionSource[] = [
     id: "source-nairobi-jobs",
     name: "Nairobi Opportunity Radar",
     kind: "job-board",
-    url: "https://example.com/nairobi-jobs",
+    url: "https://www.linkedin.com/jobs",
     reliabilityScore: 0.74,
     active: true,
     crawlIntervalMinutes: 180

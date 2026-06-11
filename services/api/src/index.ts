@@ -1,30 +1,194 @@
+import { randomUUID } from "node:crypto";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import { store } from "./store.js";
-import { freshnessStatus, interpretSearch, scoreCardTotal } from "@afrika/shared/stage2";
+import { interpretSearch, scoreCardTotal } from "@afrika/shared/stage2";
+import type { AFRIKACard, AFRIKAPlan, PlanItem } from "@afrika/shared/types";
+import { buildStore } from "./store.js";
+import { createCardFromInput, readState, sortCards, writeState } from "./repository.js";
+import type { ApiState, SearchHistoryRecord, StoredCard } from "./types.js";
 
 const app = Fastify({ logger: true });
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
+const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 await app.register(cors, {
   origin: allowedOrigins.length > 0 ? allowedOrigins : true,
   credentials: true
 });
 
+async function getRuntimeState() {
+  const state = await readState();
+  const runtime = buildStore(state.cards);
+  return { state, runtime };
+}
+
+function parseNumber(value: unknown, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function pickPlanTitle(type: AFRIKAPlan["type"]) {
+  return type === "weekend plan" ? "Weekend Plan" : type === "food route" ? "Food Route" : "Discovery Plan";
+}
+
+function validateCardPayload(payload: Partial<AFRIKACard>) {
+  const errors: string[] = [];
+  if (!payload.title?.trim()) errors.push("title");
+  if (!payload.location?.trim()) errors.push("location");
+  if (!payload.category?.trim()) errors.push("category");
+  if (!payload.kind?.trim()) errors.push("kind");
+  if (!Array.isArray(payload.tags) || payload.tags.length === 0) errors.push("tags");
+  if (!payload.coordinates || typeof payload.coordinates.lat !== "number" || typeof payload.coordinates.lng !== "number") errors.push("coordinates");
+  if (!payload.media?.imageUrl?.trim()) errors.push("media.imageUrl");
+  if (!payload.media?.alt?.trim()) errors.push("media.alt");
+  return errors;
+}
+
+function filterCards(cards: StoredCard[], query: string, interpretation = interpretSearch(query)) {
+  const normalized = query.toLowerCase();
+  return cards.filter((card) => {
+    const haystack = [
+      card.title,
+      card.location,
+      card.category,
+      card.kind,
+      card.tags.join(" "),
+      card.intelligence.summary,
+      card.intelligence.whyItMatters
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    const keywordMatch =
+      normalized.length === 0 ||
+      haystack.includes(normalized) ||
+      interpretation.categoryHints.some((hint) => haystack.includes(hint)) ||
+      (interpretation.locationHint ? card.location.toLowerCase().includes(interpretation.locationHint.toLowerCase()) : true);
+
+    return keywordMatch;
+  });
+}
+
+function buildSearchHistoryRecord(query: string, interpretation: ReturnType<typeof interpretSearch>, resultCount: number): SearchHistoryRecord {
+  return {
+    id: randomUUID(),
+    query,
+    intent: interpretation.intent,
+    resultCount,
+    createdAt: new Date().toISOString()
+  };
+}
+
 app.get("/health", async () => ({ ok: true, service: "afrika-api" }));
 
-app.get("/feed", async () => ({
-  items: store.cards,
-  meta: {
-    rankedBy: ["usefulness", "freshness", "local relevance", "trust", "visual quality"],
-    freshnessBuckets: {
-      fresh: store.cards.filter((item) => item.freshnessStatus === "fresh").length,
-      warming: store.cards.filter((item) => item.freshnessStatus === "warming").length,
-      stale: store.cards.filter((item) => item.freshnessStatus === "stale").length
+app.get("/feed", async (request) => {
+  const city = String((request.query as { city?: string }).city ?? "").trim().toLowerCase();
+  const limit = parseNumber((request.query as { limit?: string | number }).limit, 20);
+  const { state, runtime } = await getRuntimeState();
+  const items = sortCards(runtime.cards).filter((card) => (city ? card.location.toLowerCase().includes(city) : true)).slice(0, limit);
+
+  return {
+    items,
+    meta: {
+      rankedBy: ["usefulness", "freshness", "local relevance", "trust", "visual quality"],
+      freshnessBuckets: {
+        fresh: items.filter((item) => item.freshnessStatus === "fresh").length,
+        warming: items.filter((item) => item.freshnessStatus === "warming").length,
+        stale: items.filter((item) => item.freshnessStatus === "stale").length
+      },
+      totalCards: runtime.cards.length,
+      totalPlans: state.plans.length
     }
+  };
+});
+
+app.get("/cards", async (request) => {
+  const search = String((request.query as { q?: string }).q ?? "").trim();
+  const limit = parseNumber((request.query as { limit?: string | number }).limit, 50);
+  const offset = parseNumber((request.query as { offset?: string | number }).offset, 0);
+  const { runtime } = await getRuntimeState();
+  const filtered = filterCards(runtime.cards, search);
+  const items = sortCards(filtered).slice(offset, offset + limit);
+
+  return {
+    items,
+    total: filtered.length,
+    limit,
+    offset
+  };
+});
+
+app.post("/cards", async (request, reply) => {
+  const body = request.body as Partial<AFRIKACard> & { sourceId?: string; sourceUrl?: string };
+  const errors = validateCardPayload(body);
+  if (errors.length > 0) {
+    return reply.code(400).send({ error: "Invalid card payload", missing: errors });
   }
-}));
+
+  const card = createCardFromInput(body);
+  const next = await writeState((state) => ({
+    ...state,
+    cards: [card, ...state.cards]
+  }));
+
+  return reply.code(201).send({
+    card,
+    feed: buildStore(next.cards).cards.slice(0, 20)
+  });
+});
+
+app.get("/cards/:id", async (request, reply) => {
+  const params = request.params as { id: string };
+  const { runtime } = await getRuntimeState();
+  const card = runtime.cards.find((item) => item.id === params.id);
+  if (!card) return reply.code(404).send({ error: "Card not found" });
+  return card;
+});
+
+app.patch("/cards/:id", async (request, reply) => {
+  const params = request.params as { id: string };
+  const body = request.body as Partial<AFRIKACard> & { sourceId?: string; sourceUrl?: string };
+
+  const next = await writeState((state) => {
+    const index = state.cards.findIndex((item) => item.id === params.id);
+    if (index === -1) return state;
+    const current = state.cards[index]!;
+    const merged = createCardFromInput({
+      ...current,
+      ...body,
+      id: current.id
+    });
+    state.cards[index] = {
+      ...merged,
+      sourceId: body.sourceId ?? current.sourceId,
+      sourceUrl: body.sourceUrl ?? current.sourceUrl,
+      status: current.status ?? "active"
+    };
+    return state;
+  });
+
+  const updated = next.cards.find((item) => item.id === params.id);
+  if (!updated) return reply.code(404).send({ error: "Card not found" });
+  return updated;
+});
+
+app.delete("/cards/:id", async (request, reply) => {
+  const params = request.params as { id: string };
+  const { state } = await getRuntimeState();
+  const exists = state.cards.some((item) => item.id === params.id);
+  if (!exists) return reply.code(404).send({ error: "Card not found" });
+
+  await writeState((state) => {
+    const target = state.cards.find((item) => item.id === params.id);
+    if (!target) return state;
+    target.status = "archived";
+    return state;
+  });
+  return { ok: true, archived: true, id: params.id };
+});
 
 app.post("/search/interpret", async (request) => {
   const body = request.body as { query?: string };
@@ -33,202 +197,332 @@ app.post("/search/interpret", async (request) => {
 
 app.get("/search", async (request) => {
   const query = String((request.query as { q?: string }).q ?? "");
+  const recordHistory = String((request.query as { record?: string }).record ?? "true") !== "false";
   const interpretation = interpretSearch(query);
+  const { runtime } = await getRuntimeState();
+  const filtered = filterCards(runtime.cards, query, interpretation);
+  const items = sortCards(filtered).slice(0, 24);
+
+  if (recordHistory && query.trim().length > 0) {
+    await writeState((state) => ({
+      ...state,
+      searchHistory: [buildSearchHistoryRecord(query, interpretation, items.length), ...state.searchHistory].slice(0, 250)
+    }));
+  }
 
   return {
     query,
     interpretation,
-    items: store.cards.filter((card) =>
-      interpretation.categoryHints.some((hint) => card.category.toLowerCase().includes(hint) || card.tags.includes(hint))
-    )
+    items,
+    summary: `Search resolved to ${items.length} intelligent discovery cards.`
   };
 });
 
-app.get("/trends", async () => ({
-  items: store.trendSignals,
-  summary: "Trending intelligence based on saves, searches, and geo activity."
-}));
+app.get("/search/history", async () => {
+  const { state } = await getRuntimeState();
+  return {
+    items: state.searchHistory,
+    total: state.searchHistory.length
+  };
+});
 
-app.get("/recommendations", async () => ({
-  items: store.recommendationEdges
-}));
+app.delete("/search/history", async () => {
+  await writeState((state) => ({ ...state, searchHistory: [] }));
+  return { ok: true, cleared: true };
+});
 
-app.get("/graph", async () => ({
-  nodes: store.contentGraph.nodes,
-  edges: store.contentGraph.edges,
-  summary: "Content graph intelligence linking cities, clusters, and discovery pathways."
-}));
+app.get("/trends", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.trendSignals,
+    summary: "Trending intelligence based on saves, searches, and geo activity."
+  };
+});
 
-app.get("/cities", async () => ({
-  items: store.cityIntelligence,
-  summary: "City intelligence layers for trend momentum, density, and neighborhood context."
-}));
+app.get("/recommendations", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.recommendationEdges
+  };
+});
 
-app.get("/behavior", async () => ({
-  profile: store.behavioralProfile,
-  summary: "Inferred user archetype and discovery behavior for personalization."
-}));
+app.get("/graph", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    nodes: runtime.contentGraph.nodes,
+    edges: runtime.contentGraph.edges,
+    summary: "Content graph intelligence linking cities, clusters, and discovery pathways."
+  };
+});
 
-app.get("/predictive", async () => ({
-  items: store.predictiveRecommendations,
-  summary: "Predictive discovery ranking for what the user may want next."
-}));
+app.get("/cities", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.cityIntelligence,
+    summary: "City intelligence layers for trend momentum, density, and neighborhood context."
+  };
+});
 
-app.get("/self-healing", async () => ({
-  items: store.selfHealingActions,
-  summary: "Automatic cleanup actions for stale, duplicate, or low-confidence cards."
-}));
+app.get("/behavior", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    profile: runtime.behavioralProfile,
+    summary: "Inferred user archetype and discovery behavior for personalization."
+  };
+});
 
-app.get("/contributors", async () => ({
-  profiles: store.contributorNetwork.profiles,
-  averageTrust: store.contributorNetwork.averageTrust,
-  trustedContributors: store.contributorNetwork.trustedContributors,
-  roleDistribution: store.contributorNetwork.roleDistribution
-}));
+app.get("/predictive", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.predictiveRecommendations,
+    summary: "Predictive discovery ranking for what the user may want next."
+  };
+});
 
-app.get("/verification", async () => ({
-  items: store.verificationQueue,
-  summary: "Human + AI verification confidence for community intelligence submissions."
-}));
+app.get("/self-healing", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.selfHealingActions,
+    summary: "Automatic cleanup actions for stale, duplicate, or low-confidence cards."
+  };
+});
 
-app.get("/stories", async () => ({
-  items: store.culturalStories,
-  summary: "Editorial cultural stories generated from real-world local intelligence."
-}));
+app.get("/contributors", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    profiles: runtime.contributorNetwork.profiles,
+    averageTrust: runtime.contributorNetwork.averageTrust,
+    trustedContributors: runtime.contributorNetwork.trustedContributors,
+    roleDistribution: runtime.contributorNetwork.roleDistribution
+  };
+});
 
-app.get("/moderation", async () => ({
-  items: store.moderationQueue,
-  summary: "Collaborative moderation queue for trust and authenticity control."
-}));
+app.get("/verification", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.verificationQueue,
+    summary: "Human + AI verification confidence for community intelligence submissions."
+  };
+});
 
-app.get("/human-layer", async () => ({
-  layer: store.humanLayer,
-  summary: "Human intelligence network blended with the Stage 3 discovery graph."
-}));
+app.get("/stories", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.culturalStories,
+    summary: "Editorial cultural stories generated from real-world local intelligence."
+  };
+});
+
+app.get("/moderation", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.moderationQueue,
+    summary: "Collaborative moderation queue for trust and authenticity control."
+  };
+});
+
+app.get("/human-layer", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    layer: runtime.humanLayer,
+    summary: "Human intelligence network blended with the Stage 3 discovery graph."
+  };
+});
 
 app.get("/intent", async (request) => {
   const query = String((request.query as { q?: string }).q ?? "");
+  const { runtime } = await getRuntimeState();
   return {
     query,
-    intent: store.actionLayer.intent,
-    alternateSignals: store.intentSignals,
+    intent: runtime.actionLayer.intent,
+    alternateSignals: runtime.intentSignals,
     summary: "Intent engine for translating discovery into real-world actions."
   };
 });
 
-app.get("/actions", async () => ({
-  items: store.smartActions,
-  summary: "Subtle, contextual action suggestions for places, opportunities, and trips."
-}));
+app.get("/actions", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.smartActions,
+    summary: "Subtle, contextual action suggestions for places, opportunities, and trips."
+  };
+});
 
-app.get("/reservations", async () => ({
-  items: store.reservationRequests,
-  summary: "Lightweight reservation drafts for venues and experiences."
-}));
+app.get("/reservations", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.reservationRequests,
+    summary: "Lightweight reservation drafts for venues and experiences."
+  };
+});
 
-app.get("/inquiries", async () => ({
-  items: store.inquiries,
-  summary: "Inquiry workflows for viewing requests, follow-ups, and direct contact."
-}));
+app.get("/inquiries", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.inquiries,
+    summary: "Inquiry workflows for viewing requests, follow-ups, and direct contact."
+  };
+});
 
-app.get("/plans/intelligence", async () => ({
-  items: store.movementPlans,
-  summary: "Route and itinerary intelligence for movement-aware planning."
-}));
+app.get("/plans/intelligence", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.movementPlans,
+    summary: "Route and itinerary intelligence for movement-aware planning."
+  };
+});
 
-app.get("/opportunities", async () => ({
-  items: store.opportunityApplications,
-  summary: "Opportunity summaries and external application pathways."
-}));
+app.get("/opportunities", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.opportunityApplications,
+    summary: "Opportunity summaries and external application pathways."
+  };
+});
 
-app.get("/fulfillment", async () => ({
-  analytics: store.actionAnalytics,
-  summary: "Trust and fulfillment intelligence for action outcomes."
-}));
+app.get("/fulfillment", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    analytics: runtime.actionAnalytics,
+    summary: "Trust and fulfillment intelligence for action outcomes."
+  };
+});
 
-app.get("/ambient", async () => ({
-  ambient: store.ambientIntelligence,
-  summary: "Ambient suggestions, temporal patterns, and environment-aware signals."
-}));
+app.get("/ambient", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    ambient: runtime.ambientIntelligence,
+    summary: "Ambient suggestions, temporal patterns, and environment-aware signals."
+  };
+});
 
-app.get("/temporal", async () => ({
-  items: store.temporalIntelligence,
-  summary: "Temporal rhythm intelligence for African city life."
-}));
+app.get("/temporal", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.temporalIntelligence,
+    summary: "Temporal rhythm intelligence for African city life."
+  };
+});
 
-app.get("/orchestration", async () => ({
-  personalOS: store.personalOperatingSystem,
-  summary: "Cross-context orchestration for adaptive discovery and movement."
-}));
+app.get("/orchestration", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    personalOS: runtime.personalOperatingSystem,
+    summary: "Cross-context orchestration for adaptive discovery and movement."
+  };
+});
 
-app.get("/cross-domain", async () => ({
-  graph: store.crossDomainGraph,
-  summary: "Unified graph linking places, people, time, movement, and environment."
-}));
+app.get("/cross-domain", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    graph: runtime.crossDomainGraph,
+    summary: "Unified graph linking places, people, time, movement, and environment."
+  };
+});
 
-app.get("/continent", async () => ({
-  items: store.continentalIntelligence,
-  summary: "Continental intelligence layers for regional rhythm and cultural patterns."
-}));
+app.get("/continent", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.continentalIntelligence,
+    summary: "Continental intelligence layers for regional rhythm and cultural patterns."
+  };
+});
 
-app.get("/feedback-loop", async () => ({
-  feedbackLoop: store.stage7System.feedbackLoop,
-  summary: "Adaptive engagement learning loop for ranking and city performance."
-}));
+app.get("/feedback-loop", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    feedbackLoop: runtime.stage7System.feedbackLoop,
+    summary: "Adaptive engagement learning loop for ranking and city performance."
+  };
+});
 
-app.get("/self-healing/pipeline", async () => ({
-  selfHealing: store.stage7System.selfHealing,
-  summary: "Duplicate resolution, staleness detection, and confidence scoring."
-}));
+app.get("/self-healing/pipeline", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    selfHealing: runtime.stage7System.selfHealing,
+    summary: "Duplicate resolution, staleness detection, and confidence scoring."
+  };
+});
 
-app.get("/city-scaling", async () => ({
-  profiles: store.stage7System.cityScaling.profiles,
-  summary: "City bootstrapping and adaptive geo-context profiles."
-}));
+app.get("/city-scaling", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    profiles: runtime.stage7System.cityScaling.profiles,
+    summary: "City bootstrapping and adaptive geo-context profiles."
+  };
+});
 
-app.get("/ai-control", async () => ({
-  aiControl: store.stage7System.aiControl,
-  summary: "Prompt versioning, consistency validation, and model arbitration."
-}));
+app.get("/ai-control", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    aiControl: runtime.stage7System.aiControl,
+    summary: "Prompt versioning, consistency validation, and model arbitration."
+  };
+});
 
-app.get("/performance", async () => ({
-  performance: store.stage7System.performance,
-  summary: "Caching, event-driven processing, and load-aware routing."
-}));
+app.get("/performance", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    performance: runtime.stage7System.performance,
+    summary: "Caching, event-driven processing, and load-aware routing."
+  };
+});
 
-app.get("/stage7", async () => ({
-  stage7: store.stage7System,
-  summary: "Self-optimizing intelligence network for scaling African discovery."
-}));
+app.get("/stage7", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    stage7: runtime.stage7System,
+    summary: "Self-optimizing intelligence network for scaling African discovery."
+  };
+});
 
-app.get("/stage8", async () => ({
-  stage8: store.stage8System,
-  summary: "Living world model and simulation layer for African reality."
-}));
+app.get("/stage8", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    stage8: runtime.stage8System,
+    summary: "Living world model and simulation layer for African reality."
+  };
+});
 
-app.get("/stage9", async () => ({
-  stage9: store.stage9System,
-  summary: "Civilizational intelligence layer for African memory, synthesis, and continuity."
-}));
+app.get("/stage9", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    stage9: runtime.stage9System,
+    summary: "Civilizational intelligence layer for African memory, synthesis, and continuity."
+  };
+});
 
-app.get("/freshness", async () => ({
-  items: store.cards.map((card) => ({
-    id: card.id,
-    freshnessScore: card.freshnessScore,
-    freshnessStatus: freshnessStatus(card.freshnessScore),
-    trustScore: card.trustScore,
-    relevanceScore: card.relevanceScore
-  }))
-}));
+app.get("/stage10", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    stage10: runtime.stage10System,
+    summary: "Consciousness layer for emotional, cultural, and generational intelligence."
+  };
+});
 
-app.get("/cards/:id", async (request, reply) => {
-  const params = request.params as { id: string };
-  const card = store.cards.find((item) => item.id === params.id);
-  if (!card) return reply.code(404).send({ error: "Card not found" });
-  return card;
+app.get("/stage11", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    stage11: runtime.stage11System,
+    summary: "Orchestration layer coordinating movement, opportunity, and urban flow."
+  };
+});
+
+app.get("/freshness", async () => {
+  const { runtime } = await getRuntimeState();
+  return {
+    items: runtime.cards.map((card) => ({
+      id: card.id,
+      freshnessScore: card.freshnessScore,
+      freshnessStatus: card.freshnessStatus,
+      trustScore: card.trustScore,
+      relevanceScore: card.relevanceScore
+    }))
+  };
 });
 
 app.get("/admin/overview", async () => {
+  const { runtime } = await getRuntimeState();
   const qualityPreview = scoreCardTotal({
     usefulness: 0.84,
     uniqueness: 0.7,
@@ -240,45 +534,268 @@ app.get("/admin/overview", async () => {
   });
 
   return {
-    cardsInGraph: store.cards.length,
-    activeTrends: store.trendSignals.length,
-    recommendationEdges: store.recommendationEdges.length,
-    cityIntelligence: store.cityIntelligence.length,
-    graphNodes: store.contentGraph.nodes.length,
-    contributorProfiles: store.contributorNetwork.profiles.length,
-    culturalStories: store.culturalStories.length,
-    actionSignals: store.smartActions.length,
-    opportunityApplications: store.opportunityApplications.length,
-    ambientSuggestions: store.ambientIntelligence.suggestions.length,
+    cardsInGraph: runtime.cards.length,
+    activeTrends: runtime.trendSignals.length,
+    recommendationEdges: runtime.recommendationEdges.length,
+    cityIntelligence: runtime.cityIntelligence.length,
+    graphNodes: runtime.contentGraph.nodes.length,
+    contributorProfiles: runtime.contributorNetwork.profiles.length,
+    culturalStories: runtime.culturalStories.length,
+    actionSignals: runtime.smartActions.length,
+    opportunityApplications: runtime.opportunityApplications.length,
+    ambientSuggestions: runtime.ambientIntelligence.suggestions.length,
     qualityPreview: qualityPreview.total
   };
 });
 
-app.get("/admin/monitoring", async () => ({
-  ingestion: {
-    activeCrawlers: 12,
-    failedExtractions: 3,
-    queuedSources: 8,
-    sourceReliability: 0.82
-  },
-  ai: {
-    pendingSummaries: 128,
-    flaggedOutputs: 7,
-    confidenceFloor: 0.78
-  },
-  trends: store.trendSignals,
-  freshness: store.cards.map((card) => ({
-    id: card.id,
-    status: card.freshnessStatus,
-    lastVerifiedAt: card.lastVerifiedAt
-  })),
-  contributors: store.contributorNetwork.averageTrust,
-  verification: store.verificationQueue.length,
-  actionAnalytics: store.actionAnalytics,
-  actionSignals: store.smartActions.length,
-  opportunityApplications: store.opportunityApplications.length,
-  ambientMode: store.ambientIntelligence.adaptiveInterface.mode
-}));
+app.get("/admin/monitoring", async () => {
+  const { runtime, state } = await getRuntimeState();
+  return {
+    ingestion: {
+      activeCrawlers: state.sources.filter((source) => source.active).length,
+      failedExtractions: 3,
+      queuedSources: state.sources.length,
+      sourceReliability: Number((state.sources.reduce((sum, source) => sum + source.reliabilityScore, 0) / Math.max(state.sources.length, 1)).toFixed(2))
+    },
+    ai: {
+      pendingSummaries: runtime.moderationQueue.length * 8,
+      flaggedOutputs: runtime.moderationQueue.filter((item) => item.action === "suppress" || item.risk === "high").length,
+      confidenceFloor: 0.78
+    },
+    trends: runtime.trendSignals,
+    freshness: runtime.cards.map((card) => ({
+      id: card.id,
+      status: card.freshnessStatus,
+      lastVerifiedAt: card.lastVerifiedAt
+    })),
+    contributors: runtime.contributorNetwork.averageTrust,
+    verification: runtime.verificationQueue.length,
+    actionAnalytics: runtime.actionAnalytics,
+    actionSignals: runtime.smartActions.length,
+    opportunityApplications: runtime.opportunityApplications.length,
+    ambientMode: runtime.ambientIntelligence.adaptiveInterface.mode
+  };
+});
+
+app.get("/plans", async () => {
+  const { state } = await getRuntimeState();
+  return {
+    items: state.plans,
+    total: state.plans.length
+  };
+});
+
+app.post("/plans", async (request, reply) => {
+  const body = request.body as { title?: string; type?: AFRIKAPlan["type"]; userId?: string };
+  const title = body.title?.trim() || pickPlanTitle(body.type ?? "weekend plan");
+  const plan: AFRIKAPlan = {
+    id: randomUUID(),
+    title,
+    type: body.type ?? "weekend plan",
+    items: []
+  };
+
+  const next = await writeState((state) => ({
+    ...state,
+    plans: [plan, ...state.plans]
+  }));
+
+  return reply.code(201).send({ plan, total: next.plans.length });
+});
+
+app.get("/plans/:id", async (request, reply) => {
+  const params = request.params as { id: string };
+  const { state } = await getRuntimeState();
+  const plan = state.plans.find((item) => item.id === params.id);
+  if (!plan) return reply.code(404).send({ error: "Plan not found" });
+  return plan;
+});
+
+app.patch("/plans/:id", async (request, reply) => {
+  const params = request.params as { id: string };
+  const body = request.body as Partial<AFRIKAPlan>;
+  const next = await writeState((state) => {
+    const index = state.plans.findIndex((item) => item.id === params.id);
+    if (index === -1) return state;
+    state.plans[index] = {
+      ...state.plans[index]!,
+      ...body,
+      id: state.plans[index]!.id,
+      items: body.items ?? state.plans[index]!.items
+    };
+    return state;
+  });
+
+  const plan = next.plans.find((item) => item.id === params.id);
+  if (!plan) return reply.code(404).send({ error: "Plan not found" });
+  return plan;
+});
+
+app.delete("/plans/:id", async (request, reply) => {
+  const params = request.params as { id: string };
+  const { state } = await getRuntimeState();
+  const exists = state.plans.some((item) => item.id === params.id);
+  if (!exists) return reply.code(404).send({ error: "Plan not found" });
+
+  await writeState((state) => ({
+    ...state,
+    plans: state.plans.filter((item) => item.id !== params.id)
+  }));
+  return { ok: true, deleted: true, id: params.id };
+});
+
+app.post("/plans/:id/items", async (request, reply) => {
+  const params = request.params as { id: string };
+  const body = request.body as { title?: string; note?: string; cardId?: string };
+  const item: PlanItem = {
+    id: randomUUID(),
+    title: body.title?.trim() || "Planned stop",
+    note: body.note,
+    cardId: body.cardId
+  };
+
+  const next = await writeState((state) => {
+    const plan = state.plans.find((item) => item.id === params.id);
+    if (!plan) return state;
+    plan.items = [...plan.items, item];
+    return state;
+  });
+
+  const plan = next.plans.find((item) => item.id === params.id);
+  if (!plan) return reply.code(404).send({ error: "Plan not found" });
+  return { plan, item };
+});
+
+app.patch("/plans/:id/items/:itemId", async (request, reply) => {
+  const params = request.params as { id: string; itemId: string };
+  const body = request.body as Partial<PlanItem>;
+  const next = await writeState((state) => {
+    const plan = state.plans.find((item) => item.id === params.id);
+    if (!plan) return state;
+    const index = plan.items.findIndex((item) => item.id === params.itemId);
+    if (index === -1) return state;
+    plan.items[index] = {
+      ...plan.items[index]!,
+      ...body,
+      id: plan.items[index]!.id
+    };
+    return state;
+  });
+
+  const plan = next.plans.find((item) => item.id === params.id);
+  if (!plan) return reply.code(404).send({ error: "Plan not found" });
+  return plan.items.find((item) => item.id === params.itemId) ?? reply.code(404).send({ error: "Plan item not found" });
+});
+
+app.delete("/plans/:id/items/:itemId", async (request, reply) => {
+  const params = request.params as { id: string; itemId: string };
+  const next = await writeState((state) => {
+    const plan = state.plans.find((item) => item.id === params.id);
+    if (!plan) return state;
+    plan.items = plan.items.filter((item) => item.id !== params.itemId);
+    return state;
+  });
+  const plan = next.plans.find((item) => item.id === params.id);
+  if (!plan) return reply.code(404).send({ error: "Plan not found" });
+  return { ok: true, deleted: true, id: params.itemId };
+});
+
+app.get("/sources", async () => {
+  const { state } = await getRuntimeState();
+  return {
+    items: state.sources,
+    total: state.sources.length
+  };
+});
+
+app.post("/sources", async (request, reply) => {
+  const body = request.body as Partial<ApiState["sources"][number]>;
+  if (!body.name?.trim() || !body.kind?.trim() || !body.url?.trim()) {
+    return reply.code(400).send({ error: "Invalid source payload" });
+  }
+
+  const source = {
+    id: randomUUID(),
+    name: body.name.trim(),
+    kind: body.kind,
+    url: body.url,
+    reliabilityScore: Number.isFinite(body.reliabilityScore ?? NaN) ? Number(body.reliabilityScore) : 0.7,
+    active: body.active ?? true,
+    crawlIntervalMinutes: Number.isFinite(body.crawlIntervalMinutes ?? NaN) ? Number(body.crawlIntervalMinutes) : 360,
+    lastCrawledAt: body.lastCrawledAt,
+    blockedAt: body.blockedAt
+  };
+
+  const next = await writeState((state) => ({
+    ...state,
+    sources: [source, ...state.sources]
+  }));
+
+  return reply.code(201).send({ source, total: next.sources.length });
+});
+
+app.patch("/sources/:id", async (request, reply) => {
+  const params = request.params as { id: string };
+  const body = request.body as Partial<ApiState["sources"][number]>;
+  const next = await writeState((state) => {
+    const index = state.sources.findIndex((item) => item.id === params.id);
+    if (index === -1) return state;
+    state.sources[index] = {
+      ...state.sources[index]!,
+      ...body,
+      id: state.sources[index]!.id
+    };
+    return state;
+  });
+  const source = next.sources.find((item) => item.id === params.id);
+  if (!source) return reply.code(404).send({ error: "Source not found" });
+  return source;
+});
+
+app.delete("/sources/:id", async (request, reply) => {
+  const params = request.params as { id: string };
+  const { state } = await getRuntimeState();
+  const exists = state.sources.some((item) => item.id === params.id);
+  if (!exists) return reply.code(404).send({ error: "Source not found" });
+
+  await writeState((state) => ({
+    ...state,
+    sources: state.sources.filter((item) => item.id !== params.id)
+  }));
+  return { ok: true, deleted: true, id: params.id };
+});
+
+app.get("/users", async () => {
+  const { state } = await getRuntimeState();
+  return {
+    items: state.users,
+    total: state.users.length
+  };
+});
+
+app.get("/profiles/me", async () => {
+  const { state } = await getRuntimeState();
+  return state.users[0] ?? null;
+});
+
+app.patch("/users/:id", async (request, reply) => {
+  const params = request.params as { id: string };
+  const body = request.body as Partial<ApiState["users"][number]>;
+  const next = await writeState((state) => {
+    const index = state.users.findIndex((item) => item.id === params.id);
+    if (index === -1) return state;
+    state.users[index] = {
+      ...state.users[index]!,
+      ...body,
+      id: state.users[index]!.id,
+      updatedAt: new Date().toISOString()
+    };
+    return state;
+  });
+  const user = next.users.find((item) => item.id === params.id);
+  if (!user) return reply.code(404).send({ error: "User not found" });
+  return user;
+});
 
 const port = Number(process.env.PORT ?? 4000);
 

@@ -122,7 +122,7 @@ export default function AdminPage() {
               <div className="flex flex-wrap gap-2">
                 <SignalBadge label="Mode" value={ambient.adaptiveInterface.mode.replace("-", " ")} />
                 <SignalBadge label="Pulse" value={`${ambient.cityPulse.length} cities`} />
-                <SignalBadge label="Trust" value={contributorNetwork.averageTrust} />
+                <SignalBadge label="Trust" value={contributorNetwork.averageTrust.toFixed(2)} />
                 <SignalBadge label="Stage 7" value={stage7.aiControl.checks.every((check) => check.passed) ? "validated" : "review"} />
                 <SignalBadge label="Stage 8" value={stage8.worldModel.length > 0 ? "model active" : "review"} />
                 <SignalBadge label="Stage 9" value={stage9.civilizationalMemory.length > 0 ? "memory alive" : "review"} />
@@ -131,7 +131,7 @@ export default function AdminPage() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <ScrollReveal delay={0.02}>
-              <MetricTile label="Contributor trust" value={contributorNetwork.averageTrust} detail="Built from accuracy, consistency, and verification history." />
+              <MetricTile label="Contributor trust" value={contributorNetwork.averageTrust.toFixed(2)} detail="Built from accuracy, consistency, and verification history." />
             </ScrollReveal>
             <ScrollReveal delay={0.06}>
               <MetricTile label="Action signals" value={`${actionAnalytics.completedPlans}`} detail="Plan completions and real-world actions stay visible." />

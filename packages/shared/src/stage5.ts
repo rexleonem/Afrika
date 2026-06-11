@@ -126,7 +126,7 @@ function kindToIntent(card: AFRIKACard): IntentType {
 function fallbackCard(): AFRIKACard {
   return {
     id: "fallback-action-card",
-    title: "Awaiting discovery",
+    title: "Discovery signal pending",
     location: "Africa",
     category: "Discovery",
     kind: "discovery",
@@ -135,14 +135,14 @@ function fallbackCard(): AFRIKACard {
     timestamp: "2026-06-09T00:00:00.000Z",
     media: {
       imageUrl: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1200&q=80",
-      alt: "Placeholder discovery image"
+      alt: "AFRIKA discovery signal"
     },
     intelligence: {
-      summary: "A calm placeholder discovery card.",
-      whyItMatters: "Useful until live content is available.",
-      nearbyInsights: ["Placeholder nearby intelligence"],
+      summary: "A calm fallback discovery card until a live signal is available.",
+      whyItMatters: "Keeps action pathways working even before a fresh card is loaded.",
+      nearbyInsights: ["Nearby signals will appear here once a live discovery is available."],
       recommendations: ["Save for later"],
-      comparison: "Neutral placeholder"
+      comparison: "Neutral fallback"
     },
     freshnessScore: 0.5,
     trustScore: 0.5,
@@ -298,7 +298,7 @@ export function buildOpportunityApplications(cards: AFRIKACard[]): OpportunityAp
       fitScore: clamp((card.freshnessScore + card.relevanceScore + card.trustScore) / 3),
       summary: `Useful for users looking for opportunities aligned with ${card.title}.`,
       actionLabel: "apply" as const,
-      externalUrl: `https://example.com/apply/${card.id}`
+      externalUrl: `https://afrika.ng/opportunities/${card.id}`
     }));
 }
 
