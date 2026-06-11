@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Manrope, Fraunces } from "next/font/google";
 import "./globals.css";
+import { Providers } from "./providers";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -49,7 +50,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${manrope.variable} ${fraunces.variable}`}
       style={{ scrollBehavior: "smooth" }}
     >
-      <body className="overscroll-none bg-[var(--bg-primary)] text-[var(--text-primary)]">{children}</body>
+      <body className="overscroll-none bg-[var(--bg-primary)] text-[var(--text-primary)]">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
