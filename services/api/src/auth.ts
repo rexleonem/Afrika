@@ -52,6 +52,13 @@ export function parseCookie(header?: string) {
 }
 
 export function readSessionUserId(request: FastifyRequest) {
+  const authHeader = request.headers.authorization;
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice("Bearer ".length).trim();
+    const userId = verifySessionToken(token);
+    if (userId) return userId;
+  }
+
   const cookies = parseCookie(request.headers.cookie);
   return verifySessionToken(cookies.get(COOKIE_NAME));
 }

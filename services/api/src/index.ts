@@ -6,7 +6,7 @@ import type { AFRIKACard, AFRIKAPlan, PlanItem } from "@afrika/shared/types";
 import { buildStore } from "./store.js";
 import { createCardFromInput, readState, sortCards, writeState } from "./repository.js";
 import type { ApiState, SearchHistoryRecord, StoredCard } from "./types.js";
-import { clearSessionCookie, hashPassword, readSessionUserId, sanitizeUser, setSessionCookie, verifyPassword } from "./auth.js";
+import { clearSessionCookie, createSessionToken, hashPassword, readSessionUserId, sanitizeUser, setSessionCookie, verifyPassword } from "./auth.js";
 
 const app = Fastify({ logger: true });
 
@@ -16,7 +16,13 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "")
   .filter(Boolean);
 
 await app.register(cors, {
-  origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (/^https:\/\/.*\.vercel\.app$/.test(origin)) return callback(null, true);
+    if (/^http:\/\/localhost:\d+$/.test(origin)) return callback(null, true);
+    return callback(null, false);
+  },
   credentials: true
 });
 
@@ -100,7 +106,7 @@ app.get("/health", async () => ({ ok: true, service: "afrika-api" }));
 app.get("/auth/session", async (request, reply) => {
   const user = await resolveCurrentUser(request);
   if (!user) return reply.code(401).send({ authenticated: false, user: null });
-  return { authenticated: true, user: sanitizeUser(user) };
+  return { authenticated: true, user: sanitizeUser(user), token: undefined };
 });
 
 app.post("/auth/register", async (request, reply) => {
@@ -136,7 +142,7 @@ app.post("/auth/register", async (request, reply) => {
   }));
 
   setSessionCookie(reply, user.id);
-  return reply.code(201).send({ user: sanitizeUser(user) });
+  return reply.code(201).send({ user: sanitizeUser(user), token: createSessionToken(user.id) });
 });
 
 app.post("/auth/login", async (request, reply) => {
@@ -156,7 +162,7 @@ app.post("/auth/login", async (request, reply) => {
   }
 
   setSessionCookie(reply, user.id);
-  return { authenticated: true, user: sanitizeUser(user) };
+  return { authenticated: true, user: sanitizeUser(user), token: createSessionToken(user.id) };
 });
 
 app.post("/auth/logout", async (_request, reply) => {

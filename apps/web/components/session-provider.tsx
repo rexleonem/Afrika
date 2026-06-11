@@ -25,6 +25,12 @@ type SessionState = {
   signOut: () => Promise<void>;
 };
 
+type AuthResponse = {
+  authenticated: boolean;
+  user: SessionUser | null;
+  token?: string;
+};
+
 const SessionContext = createContext<SessionState>({
   status: "loading",
   user: null,
@@ -37,18 +43,33 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<SessionState["status"]>("loading");
   const [user, setUser] = useState<SessionUser | null>(null);
 
+  function persistToken(token?: string) {
+    if (typeof window === "undefined") return;
+    if (token) {
+      window.localStorage.setItem("afrika_session_token", token);
+      return;
+    }
+    window.localStorage.removeItem("afrika_session_token");
+  }
+
   useEffect(() => {
     let active = true;
-    apiFetch<{ authenticated: boolean; user: SessionUser | null }>("/auth/session", { method: "GET" })
+    apiFetch<AuthResponse>("/auth/session", { method: "GET" })
       .then((response) => {
         if (!active) return;
         setUser(response.user);
         setStatus(response.authenticated ? "authenticated" : "anonymous");
+        if (response.authenticated) {
+          if (response.token) persistToken(response.token);
+        } else {
+          persistToken(undefined);
+        }
       })
       .catch(() => {
         if (!active) return;
         setUser(null);
         setStatus("anonymous");
+        persistToken(undefined);
       });
 
     return () => {
@@ -61,25 +82,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       status,
       user,
       signIn: async (email, password) => {
-        const response = await apiFetch<{ authenticated: boolean; user: SessionUser }>("/auth/login", {
+        const response = await apiFetch<AuthResponse>("/auth/login", {
           method: "POST",
           body: JSON.stringify({ email, password })
         });
         setUser(response.user);
         setStatus("authenticated");
+        persistToken(response.token);
       },
       signUp: async (payload) => {
-        const response = await apiFetch<{ user: SessionUser }>("/auth/register", {
+        const response = await apiFetch<AuthResponse>("/auth/register", {
           method: "POST",
           body: JSON.stringify(payload)
         });
         setUser(response.user);
         setStatus("authenticated");
+        persistToken(response.token);
       },
       signOut: async () => {
         await apiFetch("/auth/logout", { method: "POST" });
         setUser(null);
         setStatus("anonymous");
+        persistToken(undefined);
       }
     }),
     [status, user]

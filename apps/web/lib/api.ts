@@ -6,12 +6,19 @@ function joinUrl(path: string) {
   return `${API_BASE_URL.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 }
 
+function readAuthToken() {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem("afrika_session_token");
+}
+
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const authToken = readAuthToken();
   const response = await fetch(joinUrl(path), {
     ...init,
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       ...(init?.headers ?? {})
     }
   });
