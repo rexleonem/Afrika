@@ -15,6 +15,7 @@
     "./stage8": "./src/stage8.ts",
     "./stage9": "./src/stage9.ts",
     "./stage10": "./src/stage10.ts",
+    "./stage11": "./src/stage11.ts",
     "./types": "./src/types.ts",
     "./theme": "./src/theme.ts"
   },

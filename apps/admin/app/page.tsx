@@ -12,6 +12,7 @@ import { buildStage7IntelligenceSystem } from "@afrika/shared/stage7";
 import { buildStage8WorldModel } from "@afrika/shared/stage8";
 import { buildStage9CivilizationalIntelligenceSystem } from "@afrika/shared/stage9";
 import { buildStage10ConsciousnessSystem } from "@afrika/shared/stage10";
+import { buildStage11OrchestrationSystem } from "@afrika/shared/stage11";
 import { AmbientGlow } from "../components/motion/ambient-glow";
 import { ScrollReveal } from "../components/motion/scroll-reveal";
 import { MetricTile, QueueRow, SectionHeader, SignalBadge } from "../components/primitives";
@@ -89,6 +90,7 @@ const stage7 = buildStage7IntelligenceSystem(featuredCards);
 const stage8 = buildStage8WorldModel(featuredCards);
 const stage9 = buildStage9CivilizationalIntelligenceSystem(featuredCards);
 const stage10 = buildStage10ConsciousnessSystem(featuredCards);
+const stage11 = buildStage11OrchestrationSystem(featuredCards);
 
 export default function AdminPage() {
   return (
@@ -428,6 +430,42 @@ export default function AdminPage() {
             ))}
             <QueueRow title="Reality harmonization" detail={stage10.realityHarmonization[0]?.synthesis ?? "Harmonization layers are active."} tone="good" />
             <QueueRow title="Societal simulation" detail={stage10.societalSimulations[0]?.outcome ?? "Simulation systems are warming up."} tone="good" />
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <article className="afrika-panel p-6">
+          <SectionHeader
+            eyebrow="Stage 11 orchestration"
+            title="Discovery, movement, opportunity, and environmental balance now flow through one calm coordination layer."
+            description="The platform now harmonizes real-world pressure without revealing the machinery behind it."
+          />
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <MetricTile label="Reality orchestration" value={`${stage11.realityOrchestration.length}`} detail="City-level flow coordination nodes." />
+            <MetricTile label="Urban harmony" value={`${stage11.urbanHarmonization.length}`} detail="Congestion, quiet zones, and nightlife balance." />
+            <MetricTile label="Environmental sync" value={`${stage11.environmentalSynchronization.length}`} detail="Weather, heat, noise, and comfort alignment." />
+            <MetricTile label="Stability signals" value={`${stage11.civilizationStability.length}`} detail="Long-term balance and cultural diversity." />
+          </div>
+          <div className="mt-5 space-y-3">
+            <QueueRow title="Invisible coordination" detail={stage11.invisibleAmbient.summary} tone="good" />
+            <QueueRow title="Flow optimization" detail={stage11.collectiveFlow[0]?.summary ?? "Flow systems are active."} tone="good" />
+            <QueueRow title="Friction reduction" detail={stage11.frictionReduction[0]?.outcome ?? "Friction reduction systems are active."} tone="good" />
+          </div>
+        </article>
+
+        <article className="afrika-panel p-6">
+          <SectionHeader
+            eyebrow="Coordination agents"
+            title="Autonomous agents now cooperate across flow, culture, environment, and opportunity routing."
+            description="This is the calm orchestration view, not a noisy operations dashboard."
+          />
+          <div className="mt-5 space-y-3">
+            {stage11.coordinationAgents.slice(0, 3).map((agent) => (
+              <QueueRow key={agent.id} title={agent.type.toUpperCase()} detail={`${agent.focus} · ${agent.status}`} tone="good" />
+            ))}
+            <QueueRow title="Opportunity routing" detail={stage11.opportunityRouting[0]?.reason ?? "Routing is adaptive and contextual."} tone="good" />
+            <QueueRow title="Continental awareness" detail={stage11.continentalAwareness[0]?.summary ?? "Continental awareness is active."} tone="good" />
           </div>
         </article>
       </section>

@@ -10,6 +10,7 @@ import { buildAmbientIntelligence } from "@afrika/shared/stage6";
 import { buildStage8WorldModel } from "@afrika/shared/stage8";
 import { buildStage9CivilizationalIntelligenceSystem } from "@afrika/shared/stage9";
 import { buildStage10ConsciousnessSystem } from "@afrika/shared/stage10";
+import { buildStage11OrchestrationSystem } from "@afrika/shared/stage11";
 import { DiscoveryCard, InsightRow, MetricTile, SectionHeader } from "../components/primitives";
 import { TrendCard, NeighborhoodCard } from "../components/cards/discovery-card";
 import { AIInsightPanel, ContextPanel } from "../components/panels/ai-insight-panel";
@@ -30,6 +31,7 @@ const ambientIntelligence = buildAmbientIntelligence(featuredCards, "2026-06-09T
 const stage8 = buildStage8WorldModel(featuredCards);
 const stage9 = buildStage9CivilizationalIntelligenceSystem(featuredCards);
 const stage10 = buildStage10ConsciousnessSystem(featuredCards);
+const stage11 = buildStage11OrchestrationSystem(featuredCards);
 const predictiveHighlights = predictDiscovery(featuredCards, behavioralProfile, cityIntelligence);
 const trendQuery = interpretSearch("trending places in Lagos this week");
 const feedHighlights = featuredCards.map((card) => ({
@@ -633,6 +635,22 @@ export default function HomePage() {
           <MetricTile label="Emotional civilization" value={`${stage10.emotionalCivilization.length}`} detail="Warmth, intensity, creativity, and reflection." />
           <MetricTile label="Cultural sync" value={`${stage10.culturalSynchronization.length}`} detail="Diaspora and global rhythm alignment." />
           <MetricTile label="Living organism" value={stage10.livingOrganism.vitality.toFixed(2)} detail="A self-aware African intelligence organism." />
+        </div>
+      </section>
+
+      <section className="px-4 sm:px-8 lg:px-12 mt-20">
+        <ScrollReveal>
+          <SectionHeader
+            eyebrow="Reality orchestration"
+            title="Discovery, movement, and opportunity now flow through an invisible coordination layer."
+            description="Stage 11 quietly balances the shape of discovery without making the interface feel busy or manipulative."
+          />
+        </ScrollReveal>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <MetricTile label="Orchestration nodes" value={`${stage11.realityOrchestration.length}`} detail="City-level coordination signals." />
+          <MetricTile label="Urban harmony" value={`${stage11.urbanHarmonization.length}`} detail="Congestion, calmness, and balance layers." />
+          <MetricTile label="Flow systems" value={`${stage11.collectiveFlow.length}`} detail="Continental exploration harmony." />
+          <MetricTile label="Ambient coordination" value={`${stage11.invisibleAmbient.signals.length}`} detail="Passive systems that keep things flowing." />
         </div>
       </section>
 
