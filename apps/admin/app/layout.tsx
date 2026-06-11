@@ -20,7 +20,7 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: {
     default: "AFRIKA Admin",
-    template: "%s � AFRIKA Admin",
+    template: "%s · AFRIKA Admin",
   },
   description: "Operations and intelligence control room for AFRIKA.",
   keywords: ["AFRIKA", "admin", "operations", "intelligence", "Africa"],
@@ -43,7 +43,12 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" data-theme="dark" className={`${manrope.variable} ${fraunces.variable}`} style={{ scrollBehavior: "smooth" }}>
+    <html
+      lang="en"
+      data-theme="dark"
+      className={`${manrope.variable} ${fraunces.variable}`}
+      style={{ scrollBehavior: "smooth" }}
+    >
       <body className="overscroll-none bg-[var(--bg-primary)] text-[var(--text-primary)]">{children}</body>
     </html>
   );
