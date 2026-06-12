@@ -7,6 +7,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { InsightRow, MetricTile, SectionHeader } from "../../../components/primitives";
 import { AIInsightPanel, ContextPanel } from "../../../components/panels/ai-insight-panel";
+import { HistoryTracker } from "../../../components/user/history-tracker";
+import { SaveButton } from "../../../components/user/save-button";
 
 type DiscoverDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -122,6 +124,7 @@ export default async function DiscoverDetailPage({ params }: DiscoverDetailPageP
 
   return (
     <main className="min-h-screen pb-24 lg:pb-12">
+      <HistoryTracker cardId={card.id} />
       <div className="relative overflow-hidden" style={{ minHeight: "72vh" }}>
         {card.media.videoUrl ? (
           <video className="absolute inset-0 h-full w-full object-cover" src={card.media.videoUrl} poster={cardImage} muted loop playsInline autoPlay />
@@ -320,6 +323,11 @@ export default async function DiscoverDetailPage({ params }: DiscoverDetailPageP
 
             <AIInsightPanel title="Actions">
               <div className="space-y-2">
+                <SaveButton
+                  cardId={card.id}
+                  label="Save this discovery"
+                  className="w-full rounded-[18px] border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-medium text-white transition hover:border-white/20 hover:bg-white/10"
+                />
                 {actionLayer.actions.slice(0, 4).map((action) => (
                   <div
                     key={action.type}

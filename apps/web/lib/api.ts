@@ -1,6 +1,7 @@
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ??
-  (process.env.NODE_ENV === "production" ? "" : "http://localhost:4000");
+  process.env.NODE_ENV === "production"
+    ? "/api"
+    : process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 function joinUrl(path: string) {
   if (!API_BASE_URL.trim()) return `/${path.replace(/^\//, "")}`;

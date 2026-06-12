@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "../../lib/api";
 import { useSession } from "../../components/session-provider";
-import { MetricTile, SectionHeader, InsightRow } from "../../components/primitives";
-import { AIInsightPanel, ContextPanel } from "../../components/panels/ai-insight-panel";
+import { MetricTile, SectionHeader } from "../../components/primitives";
 import { ScrollReveal } from "../../components/motion/scroll-reveal";
 import { AmbientGlow } from "../../components/motion/ambient-glow";
 
@@ -24,82 +23,98 @@ type SearchHistory = {
   createdAt: string;
 };
 
-type Card = {
+type SavedItem = {
   id: string;
-  title: string;
-  location: string;
-  category: string;
-  media?: { imageUrl?: string };
-  intelligence: { summary: string; whyItMatters: string };
+  card: {
+    id: string;
+    title: string;
+    location: string;
+    category: string;
+    media: { imageUrl: string };
+    intelligence: { summary: string };
+  };
+};
+
+type HistoryItem = {
+  id: string;
+  createdAt: string;
+  card: {
+    id: string;
+    title: string;
+    location: string;
+    category: string;
+  };
 };
 
 export default function ProfilePage() {
   const { status, user, signOut } = useSession();
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [history, setHistory] = useState<SearchHistory[]>([]);
-  const [savedCards, setSavedCards] = useState<Card[]>([]);
+  const [searches, setSearches] = useState<SearchHistory[]>([]);
+  const [saved, setSaved] = useState<SavedItem[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let active = true;
-    async function load() {
-      try {
-        const [plansResponse, historyResponse, cardsResponse] = await Promise.all([
-          apiFetch<{ items: Plan[] }>("/plans"),
-          apiFetch<{ items: SearchHistory[] }>("/search/history"),
-          apiFetch<{ items: Card[] }>("/cards?limit=6")
-        ]);
-        if (!active) return;
-        setPlans(plansResponse.items);
-        setHistory(historyResponse.items);
-        setSavedCards(cardsResponse.items);
-      } catch {
-        if (!active) return;
-        setPlans([]);
-        setHistory([]);
-        setSavedCards([]);
-      } finally {
-        if (active) setLoading(false);
-      }
+    if (status !== "authenticated") {
+      setLoading(false);
+      return;
     }
 
-    load();
+    let active = true;
+    void Promise.all([
+      apiFetch<{ items: Plan[] }>("/plans"),
+      apiFetch<{ items: SearchHistory[] }>("/search/history"),
+      apiFetch<{ items: SavedItem[] }>("/saves"),
+      apiFetch<{ items: HistoryItem[] }>("/history/views?limit=6")
+    ])
+      .then(([plansResponse, searchesResponse, savesResponse, historyResponse]) => {
+        if (!active) return;
+        setPlans(plansResponse.items);
+        setSearches(searchesResponse.items);
+        setSaved(savesResponse.items);
+        setHistory(historyResponse.items);
+      })
+      .catch(() => {
+        if (!active) return;
+        setPlans([]);
+        setSearches([]);
+        setSaved([]);
+        setHistory([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
     return () => {
       active = false;
     };
-  }, []);
-
-  const interestTags = useMemo(
-    () => ["Discovery", "Culture", "Food routes", "Weekend plans", "Map-first", "Quiet places", "Opportunities"],
-    []
-  );
+  }, [status]);
 
   if (loading) {
     return (
-      <main className="min-h-screen px-4 py-16 sm:px-8 lg:px-12">
-        <div className="afrika-panel p-8">Loading profile intelligence…</div>
+      <main className="px-4 pb-24 pt-16 sm:px-8 lg:px-12">
+        <div className="afrika-panel p-6 text-sm text-white/65">Loading profile...</div>
       </main>
     );
   }
 
   if (status !== "authenticated" || !user) {
     return (
-      <main className="min-h-screen px-4 py-16 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-4xl">
-          <div className="afrika-panel p-8">
-            <AmbientGlow variant="gold" size="lg" className="top-0 right-0" opacity={0.18} />
-            <div className="flex flex-wrap gap-2 mb-6">
-              <span className="afrika-chip">Profile</span>
-              <span className="afrika-chip">Session required</span>
-            </div>
-            <h1 className="afrika-hero-title text-3xl">Sign in to see your saved work</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/65">
-              Your saved plans, recent searches, and discovery history will appear here once you sign in.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href={"/sign-in" as const} className="btn-primary">Sign in</Link>
-              <Link href={"/sign-up" as const} className="btn-secondary">Create account</Link>
-            </div>
+      <main className="px-4 pb-24 pt-16 sm:px-8 lg:px-12">
+        <div className="afrika-panel p-8">
+          <AmbientGlow variant="gold" size="lg" className="right-0 top-0" opacity={0.16} />
+          <SectionHeader
+            eyebrow="Profile"
+            title="Sign in to see your saved work."
+            description="Your plans, saved discoveries, recent searches, and viewed places only make sense once they belong to you."
+          />
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/sign-in" className="btn-primary">
+              Sign in
+            </Link>
+            <Link href="/sign-up" className="btn-secondary">
+              Create account
+            </Link>
           </div>
         </div>
       </main>
@@ -107,16 +122,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen pb-24 lg:pb-12">
-      <section className="relative overflow-hidden px-4 pt-14 pb-10 sm:px-8 lg:px-12" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
-        <AmbientGlow variant="clay" size="lg" className="top-[10%] right-[5%]" opacity={0.22} />
-        <div className="relative z-10 grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
+    <main className="pb-24 lg:pb-12">
+      <section className="relative overflow-hidden px-4 pb-10 pt-14 sm:px-8 lg:px-12" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+        <AmbientGlow variant="clay" size="lg" className="right-[5%] top-[10%]" opacity={0.2} />
+        <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-5">
-            <div className="flex flex-wrap gap-2">
-              <span className="afrika-chip">Identity graph</span>
-              <span className="afrika-chip">Taste profile</span>
-              <span className="afrika-chip">Session live</span>
-            </div>
             <div className="flex items-center gap-4">
               <div className="flex h-20 w-20 items-center justify-center rounded-[24px] border border-white/10 bg-white/5 text-3xl font-semibold text-white">
                 {user.name.charAt(0).toUpperCase()}
@@ -128,125 +138,130 @@ export default function ProfilePage() {
               </div>
             </div>
             <h1 className="afrika-hero-title max-w-3xl text-3xl sm:text-4xl">
-              Your account reflects the places, routes, and questions you keep returning to.
+              Your profile is now tied to real places, real plans, and the questions you keep returning to.
             </h1>
             <p className="max-w-2xl text-sm leading-7 text-white/65">
-              Your saved plans and recent searches stay connected across the product.
+              AFRIKA keeps track of what you saved, what you asked Nommo, and the places you opened long enough to care about.
             </p>
             <div className="flex flex-wrap gap-3">
+              <Link href="/search" className="btn-primary">
+                Keep exploring
+              </Link>
               <button className="btn-secondary" onClick={() => void signOut()}>
                 Sign out
               </button>
-              <Link href={"/search" as const} className="btn-primary">
-                Continue exploring
-              </Link>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <MetricTile label="Saved cards" value={`${savedCards.length}`} detail="Places ready for a second look." />
-            <MetricTile label="Plans" value={`${plans.length}`} detail="Stored persistently." />
-            <MetricTile label="Searches" value={`${history.length}`} detail="Recent intent history." />
-            <MetricTile label="Role" value={user.role.replace(/-/g, " ")} detail="Access level from session." />
+            <MetricTile label="Saved" value={`${saved.length}`} detail="Places you held onto." />
+            <MetricTile label="Plans" value={`${plans.length}`} detail="Routes and ideas in progress." />
+            <MetricTile label="Searches" value={`${searches.length}`} detail="Questions you've asked." />
+            <MetricTile label="Viewed" value={`${history.length}`} detail="Cards you've opened recently." />
           </div>
         </div>
       </section>
 
-      <section className="px-4 sm:px-8 lg:px-12 mt-10">
-        <div className="grid gap-8 xl:grid-cols-[1fr_300px]">
+      <section className="mt-10 px-4 sm:px-8 lg:px-12">
+        <div className="grid gap-8 xl:grid-cols-[1fr_320px]">
           <div className="space-y-8">
             <ScrollReveal>
-              <SectionHeader eyebrow="Profile intelligence" title="Your profile reads like the places you return to." />
-              <div className="mt-5 flex flex-wrap gap-2">
-                {interestTags.map((tag) => (
-                  <span key={tag} className="afrika-chip">{tag}</span>
-                ))}
-              </div>
+              <SectionHeader
+                eyebrow="Saved plans"
+                title="What you're actively putting together."
+                description="Every plan below is coming from the live API, not a placeholder board."
+              />
             </ScrollReveal>
 
-            <ScrollReveal>
-              <SectionHeader eyebrow="Saved plans" title="What you’re actively putting together." />
-              <div className="mt-5 grid gap-3">
-                {plans.length > 0 ? (
-                  plans.map((plan) => (
-                    <div key={plan.id} className="afrika-panel p-5">
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <div className="afrika-label">{plan.type}</div>
-                          <div className="mt-1 text-lg font-semibold text-white">{plan.title}</div>
-                        </div>
-                        <span className="afrika-chip">{plan.items.length} items</span>
+            <div className="grid gap-4">
+              {plans.length === 0 ? (
+                <div className="afrika-panel p-5 text-sm text-white/60">You have not created a plan yet.</div>
+              ) : (
+                plans.map((plan) => (
+                  <div key={plan.id} className="afrika-panel p-5">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <div className="afrika-label">{plan.type}</div>
+                        <div className="mt-2 text-lg font-semibold text-white">{plan.title}</div>
                       </div>
-                      <div className="mt-4 space-y-2">
-                        {plan.items.slice(0, 3).map((item) => (
-                          <div key={item.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75">
-                            {item.title}
-                          </div>
-                        ))}
-                      </div>
+                      <span className="afrika-chip">{plan.items.length} items</span>
                     </div>
-                  ))
-                ) : (
-                  <div className="afrika-panel p-5 text-sm text-white/60">No saved plans yet. Open the plans page to start one.</div>
-                )}
-              </div>
-            </ScrollReveal>
-
-            <ScrollReveal>
-              <SectionHeader eyebrow="Recent searches" title="What you’ve been asking Nommo." />
-              <div className="mt-5 space-y-3">
-                {history.length > 0 ? (
-                  history.slice(0, 5).map((entry) => (
-                    <div key={entry.id} className="afrika-panel p-5">
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <div className="text-sm font-medium text-white">{entry.query}</div>
-                          <div className="mt-1 text-xs uppercase tracking-[0.28em] text-white/45">{entry.intent}</div>
+                    <div className="mt-4 space-y-2">
+                      {plan.items.slice(0, 3).map((item) => (
+                        <div key={item.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75">
+                          {item.title}
                         </div>
-                        <div className="text-xs text-white/55">{entry.resultCount} results</div>
-                      </div>
+                      ))}
                     </div>
-                  ))
-                ) : (
-                  <div className="afrika-panel p-5 text-sm text-white/60">Search history will appear here after your first live query.</div>
-                )}
-              </div>
-            </ScrollReveal>
+                  </div>
+                ))
+              )}
+            </div>
 
             <ScrollReveal>
-              <SectionHeader eyebrow="Saved discoveries" title="Places worth keeping close." />
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                {savedCards.length > 0 ? (
-                  savedCards.map((card) => (
-                    <Link key={card.id} href={`/discover/${card.id}`} className="afrika-panel block overflow-hidden p-0">
-                      <div className="aspect-[4/3] bg-cover bg-center" style={{ backgroundImage: `url(${card.media?.imageUrl ?? ""})` }} />
-                      <div className="p-5">
-                        <div className="afrika-label">{card.category}</div>
-                        <div className="mt-2 text-lg font-semibold text-white">{card.title}</div>
-                        <div className="mt-1 text-xs uppercase tracking-[0.28em] text-white/45">{card.location}</div>
-                        <p className="mt-3 text-sm leading-6 text-white/65">{card.intelligence?.summary}</p>
-                      </div>
-                    </Link>
-                  ))
-                ) : (
-                  <div className="afrika-panel p-5 text-sm text-white/60">Saved discoveries will show up once the feed and save flows are connected.</div>
-                )}
-              </div>
+              <SectionHeader
+                eyebrow="Saved discoveries"
+                title="Places worth reopening."
+                description="These are the cards you explicitly saved, not just the latest cards in the feed."
+              />
             </ScrollReveal>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {saved.length === 0 ? (
+                <div className="afrika-panel p-5 text-sm text-white/60">Nothing saved yet. Save a discovery from any detail page.</div>
+              ) : (
+                saved.map((item) => (
+                  <Link key={item.id} href={`/discover/${item.card.id}`} className="afrika-panel block overflow-hidden p-0">
+                    <div className="aspect-[4/3] bg-cover bg-center" style={{ backgroundImage: `url(${item.card.media.imageUrl})` }} />
+                    <div className="p-5">
+                      <div className="afrika-label">{item.card.category}</div>
+                      <div className="mt-2 text-lg font-semibold text-white">{item.card.title}</div>
+                      <div className="mt-1 text-xs uppercase tracking-[0.28em] text-white/45">{item.card.location}</div>
+                      <p className="mt-3 text-sm leading-6 text-white/65">{item.card.intelligence.summary}</p>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+
+            <ScrollReveal>
+              <SectionHeader
+                eyebrow="Recent searches"
+                title="What you've been asking Nommo."
+                description="Queries are only stored when the live search endpoint resolves them."
+              />
+            </ScrollReveal>
+
+            <div className="space-y-3">
+              {searches.length === 0 ? (
+                <div className="afrika-panel p-5 text-sm text-white/60">No recorded searches yet.</div>
+              ) : (
+                searches.slice(0, 5).map((entry) => (
+                  <div key={entry.id} className="afrika-panel p-5">
+                    <div className="text-sm font-medium text-white">{entry.query}</div>
+                    <div className="mt-1 text-xs uppercase tracking-[0.28em] text-white/45">{entry.intent}</div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
-          <ContextPanel className="xl:sticky xl:top-6 xl:h-fit">
-            <AIInsightPanel title="Account reading" live>
-              <InsightRow title="Identity" detail={`${user.name} · ${user.role}`} accent />
-              <InsightRow title="Session" detail="Signed in and ready to sync." accent />
-              <InsightRow title="Sync" detail="Plans, cards, and searches stay available across visits." accent />
-            </AIInsightPanel>
-
-            <AIInsightPanel title="Profile summary">
-              <p className="text-xs leading-5 text-white/65">
-                The profile now reflects your saved plans, searches, and discovery rhythm.
-              </p>
-            </AIInsightPanel>
-          </ContextPanel>
+          <aside className="space-y-4">
+            <div className="afrika-panel p-5">
+              <div className="afrika-label">Recent views</div>
+              <div className="mt-4 space-y-3">
+                {history.length === 0 ? (
+                  <p className="text-sm leading-6 text-white/60">Your recent card views will appear here once you open a few discoveries.</p>
+                ) : (
+                  history.map((item) => (
+                    <Link key={item.id} href={`/discover/${item.card.id}`} className="block rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                      <div className="text-sm font-medium text-white">{item.card.title}</div>
+                      <div className="mt-1 text-xs uppercase tracking-[0.28em] text-white/45">{item.card.location}</div>
+                    </Link>
+                  ))
+                )}
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
     </main>

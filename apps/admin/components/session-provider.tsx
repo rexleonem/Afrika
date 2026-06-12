@@ -14,6 +14,8 @@ export type SessionUser = {
   preferences: {
     preferredCities: string[];
     interests: string[];
+    ambientSuggestions?: boolean;
+    notificationsEnabled?: boolean;
   };
 };
 

@@ -92,7 +92,9 @@ function buildSeedState(): ApiState {
         updatedAt: new Date().toISOString(),
         preferences: {
           preferredCities: ["Lagos", "Accra", "Nairobi"],
-          interests: ["discovery", "culture", "food"]
+          interests: ["discovery", "culture", "food"],
+          ambientSuggestions: true,
+          notificationsEnabled: true
         }
       },
       {
@@ -105,11 +107,15 @@ function buildSeedState(): ApiState {
         updatedAt: new Date().toISOString(),
         preferences: {
           preferredCities: ["Lagos", "Accra", "Nairobi"],
-          interests: ["discovery", "culture", "opportunities"]
+          interests: ["discovery", "culture", "opportunities"],
+          ambientSuggestions: true,
+          notificationsEnabled: true
         }
       }
     ],
-    searchHistory: []
+    searchHistory: [],
+    saves: [],
+    viewHistory: []
   };
 }
 
@@ -133,7 +139,9 @@ async function loadState() {
       plans: mergeSeedPlans(parsed.plans),
       sources: Array.isArray(parsed.sources) && parsed.sources.length > 0 ? parsed.sources : buildSeedState().sources,
       users: Array.isArray(parsed.users) && parsed.users.length > 0 ? parsed.users : buildSeedState().users,
-      searchHistory: Array.isArray(parsed.searchHistory) ? parsed.searchHistory : []
+      searchHistory: Array.isArray(parsed.searchHistory) ? parsed.searchHistory : [],
+      saves: Array.isArray(parsed.saves) ? parsed.saves : [],
+      viewHistory: Array.isArray(parsed.viewHistory) ? parsed.viewHistory : []
     } satisfies ApiState;
   } catch {
     const seed = buildSeedState();

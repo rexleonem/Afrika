@@ -1,28 +1,117 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { apiFetch } from "../../lib/api";
+import { useSession } from "../../components/session-provider";
 import { ScrollReveal } from "../../components/motion/scroll-reveal";
 import { SectionHeader } from "../../components/primitives";
 
+type NotificationItem = {
+  id: string;
+  kind: string;
+  title: string;
+  body: string;
+  href: string;
+  createdAt: string;
+};
+
 export default function NotificationsPage() {
+  const { status } = useSession();
+  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (status !== "authenticated") {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+
+    let active = true;
+    void apiFetch<{ items: NotificationItem[] }>("/notifications")
+      .then((response) => {
+        if (!active) return;
+        setItems(response.items);
+      })
+      .catch(() => {
+        if (!active) return;
+        setItems([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [status]);
+
+  if (loading) {
+    return (
+      <main className="px-4 pb-24 pt-16 sm:px-8 lg:px-12">
+        <div className="afrika-panel p-6 text-sm text-white/65">Loading notifications...</div>
+      </main>
+    );
+  }
+
+  if (status !== "authenticated") {
+    return (
+      <main className="px-4 pb-24 pt-16 sm:px-8 lg:px-12">
+        <div className="afrika-panel p-8">
+          <SectionHeader
+            eyebrow="Updates"
+            title="Sign in to see your live signals."
+            description="Notifications are generated from your saved places, recent views, and movement in the intelligence graph."
+          />
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/sign-in" className="btn-primary">
+              Sign in
+            </Link>
+            <Link href="/search" className="btn-secondary">
+              Keep exploring
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="pb-24 lg:pb-12 px-4 sm:px-8 lg:px-12 mt-16">
+    <main className="px-4 pb-24 pt-16 sm:px-8 lg:px-12">
       <ScrollReveal>
         <SectionHeader
           eyebrow="Updates"
-          title="Your Notifications"
-          description="Stay connected with the latest signals and discoveries."
+          title="Your notifications"
+          description="Signals worth returning to, based on what you saved, opened, and asked Nommo."
         />
       </ScrollReveal>
-      
-      <div className="mt-12 flex flex-col items-center justify-center py-20 text-center">
-        <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6" style={{ background: "var(--bg-glass-light)", border: "1px solid var(--border-subtle)" }}>
-          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="var(--text-muted)" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
+
+      {items.length === 0 ? (
+        <div className="afrika-panel mt-10 p-8 text-center">
+          <h2 className="text-xl font-semibold text-white">Nothing new just yet.</h2>
+          <p className="mt-3 text-sm leading-6 text-white/60">
+            As soon as a saved place picks up momentum or a relevant cultural story lands, it will show up here.
+          </p>
         </div>
-        <h3 className="text-xl font-medium mb-2" style={{ color: "var(--text-primary)" }}>No new notifications</h3>
-        <p className="max-w-sm text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
-          When there are new cultural movements, places, or updates matching your intelligence graph, they will appear here.
-        </p>
-      </div>
+      ) : (
+        <div className="mt-10 space-y-4">
+          {items.map((item) => (
+            <Link key={item.id} href={item.href} className="afrika-panel block p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="afrika-label">{item.kind}</div>
+                  <div className="mt-2 text-lg font-semibold text-white">{item.title}</div>
+                  <p className="mt-3 text-sm leading-6 text-white/65">{item.body}</p>
+                </div>
+                <div className="text-xs text-white/45">
+                  {new Date(item.createdAt).toLocaleDateString("en-NG", { month: "short", day: "numeric" })}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </main>
   );
 }

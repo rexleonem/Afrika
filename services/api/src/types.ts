@@ -26,7 +26,13 @@ export type ApiUser = {
   preferences: {
     preferredCities: string[];
     interests: string[];
+    ambientSuggestions?: boolean;
+    notificationsEnabled?: boolean;
   };
+};
+
+export type StoredPlan = AFRIKAPlan & {
+  userId?: string;
 };
 
 export type SearchHistoryRecord = {
@@ -42,12 +48,28 @@ export type ApiSource = IngestionSource & {
   blockedAt?: string;
 };
 
+export type SavedCardRecord = {
+  id: string;
+  userId: string;
+  cardId: string;
+  createdAt: string;
+};
+
+export type ViewHistoryRecord = {
+  id: string;
+  userId: string;
+  cardId: string;
+  createdAt: string;
+};
+
 export type ApiState = {
   cards: StoredCard[];
-  plans: AFRIKAPlan[];
+  plans: StoredPlan[];
   sources: ApiSource[];
   users: ApiUser[];
   searchHistory: SearchHistoryRecord[];
+  saves: SavedCardRecord[];
+  viewHistory: ViewHistoryRecord[];
 };
 
 export type AFRIKACardInput = Pick<

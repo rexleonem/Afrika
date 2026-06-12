@@ -5,7 +5,7 @@ import { interpretSearch, scoreCardTotal } from "@afrika/shared/stage2";
 import type { AFRIKACard, AFRIKAPlan, PlanItem } from "@afrika/shared/types";
 import { buildStore } from "./store.js";
 import { createCardFromInput, readState, sortCards, writeState } from "./repository.js";
-import type { ApiState, SearchHistoryRecord, StoredCard } from "./types.js";
+import type { ApiState, ApiUser, SearchHistoryRecord, StoredCard } from "./types.js";
 import { clearSessionCookie, createSessionToken, hashPassword, readSessionUserId, sanitizeUser, setSessionCookie, verifyPassword } from "./auth.js";
 
 const app = Fastify({ logger: true });
@@ -94,6 +94,130 @@ async function resolveCurrentUser(request: FastifyRequest) {
   if (!userId) return null;
   const { state } = await getRuntimeState();
   return state.users.find((user) => user.id === userId) ?? null;
+}
+
+async function requireUser(request: FastifyRequest, reply: FastifyReply) {
+  const user = await resolveCurrentUser(request);
+  if (!user) {
+    reply.code(401).send({ error: "Authentication required." });
+    return null;
+  }
+  return user;
+}
+
+async function requireAdmin(request: FastifyRequest, reply: FastifyReply) {
+  const user = await requireUser(request, reply);
+  if (!user) return null;
+  if (user.role !== "admin") {
+    reply.code(403).send({ error: "Admin access required." });
+    return null;
+  }
+  return user;
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function canManageCard(user: ApiUser) {
+  return user.role === "admin" || user.role === "moderator" || user.role === "creator" || user.role === "contributor" || user.role === "verified-contributor";
+}
+
+function buildNommoAnswer(query: string, items: StoredCard[], interpretation: ReturnType<typeof interpretSearch>) {
+  if (items.length === 0) {
+    return {
+      summary: "I couldn't find a strong match yet. Try naming a city, mood, or specific kind of place.",
+      suggestions: ["Quiet work corners in Lagos", "Food spots locals return to in Accra", "Calm weekend routes in Nairobi"]
+    };
+  }
+
+  const [first, second, third] = items;
+  const lines = [
+    `${first.title} stands out first because ${first.intelligence.whyItMatters.toLowerCase()}`,
+    second ? `${second.title} is the cleaner alternative if you want a different pace.` : null,
+    interpretation.locationHint ? `I weighted ${interpretation.locationHint} more heavily because you asked with location in mind.` : null,
+    third ? `${third.title} is worth keeping nearby as a fallback.` : null
+  ].filter(Boolean);
+
+  return {
+    summary: lines.join(" "),
+    suggestions: [
+      ...first.intelligence.recommendations,
+      ...(second?.intelligence.recommendations ?? []),
+      ...(third?.intelligence.nearbyInsights ?? [])
+    ].slice(0, 4)
+  };
+}
+
+function buildNotifications(user: ApiUser, state: ApiState, runtime: Awaited<ReturnType<typeof getRuntimeState>>["runtime"]) {
+  const saved = state.saves
+    .filter((item) => item.userId === user.id)
+    .map((item) => ({
+      ...item,
+      card: runtime.cards.find((card) => card.id === item.cardId)
+    }))
+    .filter((item): item is typeof item & { card: StoredCard } => Boolean(item.card));
+
+  const history = state.viewHistory
+    .filter((item) => item.userId === user.id)
+    .map((item) => ({
+      ...item,
+      card: runtime.cards.find((card) => card.id === item.cardId)
+    }))
+    .filter((item): item is typeof item & { card: StoredCard } => Boolean(item.card));
+
+  return [
+    saved[0]
+      ? {
+          id: `save-${saved[0].id}`,
+          kind: "saved",
+          title: `Still thinking about ${saved[0].card.title}?`,
+          body: saved[0].card.intelligence.whyItMatters,
+          href: `/discover/${saved[0].card.id}`,
+          createdAt: saved[0].createdAt
+        }
+      : null,
+    history[0]
+      ? {
+          id: `history-${history[0].id}`,
+          kind: "history",
+          title: `You spent time with ${history[0].card.title}.`,
+          body: "Pick it back up or compare it with nearby options.",
+          href: `/discover/${history[0].card.id}`,
+          createdAt: history[0].createdAt
+        }
+      : null,
+    runtime.trendSignals[0]
+      ? {
+          id: `trend-${runtime.trendSignals[0].locationKey}`,
+          kind: "trend",
+          title: runtime.trendSignals[0].label,
+          body: `Momentum score ${runtime.trendSignals[0].score.toFixed(2)} is pulling this area upward.`,
+          href: "/search",
+          createdAt: new Date().toISOString()
+        }
+      : null,
+    runtime.culturalStories[0]
+      ? {
+          id: `story-${runtime.culturalStories[0].id}`,
+          kind: "story",
+          title: runtime.culturalStories[0].title,
+          body: runtime.culturalStories[0].summary,
+          href: "/nommo",
+          createdAt: new Date().toISOString()
+        }
+      : null
+  ]
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function planBelongsToUser(plan: ApiState["plans"][number], user: ApiUser | null) {
+  if (!plan.userId) return !user;
+  return user?.id === plan.userId;
 }
 
 function authCookieHeaders(reply: FastifyReply) {
@@ -208,6 +332,12 @@ app.get("/cards", async (request) => {
 });
 
 app.post("/cards", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+  if (!canManageCard(user)) {
+    return reply.code(403).send({ error: "You do not have permission to create cards." });
+  }
+
   const body = request.body as Partial<AFRIKACard> & { sourceId?: string; sourceUrl?: string };
   const errors = validateCardPayload(body);
   if (errors.length > 0) {
@@ -235,6 +365,12 @@ app.get("/cards/:id", async (request, reply) => {
 });
 
 app.patch("/cards/:id", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+  if (!canManageCard(user)) {
+    return reply.code(403).send({ error: "You do not have permission to edit cards." });
+  }
+
   const params = request.params as { id: string };
   const body = request.body as Partial<AFRIKACard> & { sourceId?: string; sourceUrl?: string };
 
@@ -262,6 +398,12 @@ app.patch("/cards/:id", async (request, reply) => {
 });
 
 app.delete("/cards/:id", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+  if (!canManageCard(user)) {
+    return reply.code(403).send({ error: "You do not have permission to archive cards." });
+  }
+
   const params = request.params as { id: string };
   const { state } = await getRuntimeState();
   const exists = state.cards.some((item) => item.id === params.id);
@@ -288,11 +430,18 @@ app.get("/search", async (request) => {
   const { runtime } = await getRuntimeState();
   const filtered = filterCards(runtime.cards, query, interpretation);
   const items = sortCards(filtered).slice(0, 24);
+  const currentUser = await resolveCurrentUser(request);
 
-  if (recordHistory && query.trim().length > 0) {
+  if (recordHistory && query.trim().length > 0 && currentUser) {
     await writeState((state) => ({
       ...state,
-      searchHistory: [buildSearchHistoryRecord(query, interpretation, items.length), ...state.searchHistory].slice(0, 250)
+      searchHistory: [
+        {
+          ...buildSearchHistoryRecord(query, interpretation, items.length),
+          userId: currentUser.id
+        },
+        ...state.searchHistory.filter((item) => item.userId === currentUser.id)
+      ].slice(0, 250)
     }));
   }
 
@@ -304,17 +453,160 @@ app.get("/search", async (request) => {
   };
 });
 
-app.get("/search/history", async () => {
+app.get("/search/history", async (request) => {
   const { state } = await getRuntimeState();
+  const user = await resolveCurrentUser(request);
+  const items = user ? state.searchHistory.filter((entry) => entry.userId === user.id) : [];
   return {
-    items: state.searchHistory,
-    total: state.searchHistory.length
+    items,
+    total: items.length
   };
 });
 
-app.delete("/search/history", async () => {
-  await writeState((state) => ({ ...state, searchHistory: [] }));
+app.delete("/search/history", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+
+  await writeState((state) => ({
+    ...state,
+    searchHistory: state.searchHistory.filter((entry) => entry.userId !== user.id)
+  }));
   return { ok: true, cleared: true };
+});
+
+app.get("/saves", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+
+  const { state, runtime } = await getRuntimeState();
+  const items = state.saves
+    .filter((item) => item.userId === user.id)
+    .map((item) => ({
+      id: item.id,
+      cardId: item.cardId,
+      createdAt: item.createdAt,
+      card: runtime.cards.find((card) => card.id === item.cardId)
+    }))
+    .filter((item): item is typeof item & { card: StoredCard } => Boolean(item.card));
+
+  return { items, total: items.length };
+});
+
+app.post("/saves", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+
+  const body = request.body as { cardId?: string };
+  if (!body.cardId?.trim()) {
+    return reply.code(400).send({ error: "cardId is required." });
+  }
+
+  const { runtime } = await getRuntimeState();
+  const card = runtime.cards.find((item) => item.id === body.cardId);
+  if (!card) return reply.code(404).send({ error: "Card not found." });
+
+  const next = await writeState((state) => {
+    const existing = state.saves.find((item) => item.userId === user.id && item.cardId === body.cardId);
+    if (existing) return state;
+    state.saves.unshift({
+      id: randomUUID(),
+      userId: user.id,
+      cardId: body.cardId!,
+      createdAt: new Date().toISOString()
+    });
+    return state;
+  });
+
+  const saved = next.saves.find((item) => item.userId === user.id && item.cardId === body.cardId);
+  return reply.code(201).send({ ok: true, saved, card });
+});
+
+app.delete("/saves/:cardId", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+  const params = request.params as { cardId: string };
+
+  await writeState((state) => {
+    state.saves = state.saves.filter((item) => !(item.userId === user.id && item.cardId === params.cardId));
+    return state;
+  });
+
+  return { ok: true, removed: true, cardId: params.cardId };
+});
+
+app.get("/history/views", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+
+  const limit = parseNumber((request.query as { limit?: string | number }).limit, 20);
+  const { state, runtime } = await getRuntimeState();
+  const items = state.viewHistory
+    .filter((item) => item.userId === user.id)
+    .slice(0, limit)
+    .map((item) => ({
+      id: item.id,
+      createdAt: item.createdAt,
+      card: runtime.cards.find((card) => card.id === item.cardId)
+    }))
+    .filter((item): item is typeof item & { card: StoredCard } => Boolean(item.card));
+
+  return { items, total: items.length };
+});
+
+app.post("/history/views", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+
+  const body = request.body as { cardId?: string };
+  if (!body.cardId?.trim()) {
+    return reply.code(400).send({ error: "cardId is required." });
+  }
+
+  const { runtime } = await getRuntimeState();
+  const card = runtime.cards.find((item) => item.id === body.cardId);
+  if (!card) return reply.code(404).send({ error: "Card not found." });
+
+  await writeState((state) => {
+    state.viewHistory = [
+      {
+        id: randomUUID(),
+        userId: user.id,
+        cardId: body.cardId!,
+        createdAt: new Date().toISOString()
+      },
+      ...state.viewHistory.filter((item) => !(item.userId === user.id && item.cardId === body.cardId))
+    ].slice(0, 1000);
+    return state;
+  });
+
+  return reply.code(201).send({ ok: true, tracked: true, cardId: body.cardId });
+});
+
+app.get("/notifications", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+
+  const runtimeState = await getRuntimeState();
+  return {
+    items: buildNotifications(user, runtimeState.state, runtimeState.runtime)
+  };
+});
+
+app.post("/nommo/ask", async (request) => {
+  const body = request.body as { query?: string };
+  const query = body.query?.trim() ?? "";
+  const interpretation = interpretSearch(query);
+  const { runtime } = await getRuntimeState();
+  const items = sortCards(filterCards(runtime.cards, query, interpretation)).slice(0, 5);
+  const answer = buildNommoAnswer(query, items, interpretation);
+
+  return {
+    query,
+    interpretation,
+    answer: answer.summary,
+    suggestions: answer.suggestions,
+    items
+  };
 });
 
 app.get("/trends", async () => {
@@ -380,6 +672,34 @@ app.get("/contributors", async () => {
     averageTrust: runtime.contributorNetwork.averageTrust,
     trustedContributors: runtime.contributorNetwork.trustedContributors,
     roleDistribution: runtime.contributorNetwork.roleDistribution
+  };
+});
+
+app.get("/creators/:id", async (request, reply) => {
+  const params = request.params as { id: string };
+  const { runtime } = await getRuntimeState();
+  const profile =
+    runtime.contributorNetwork.profiles.find((item) => item.id === params.id) ??
+    runtime.contributorNetwork.profiles.find((item) => slugify(item.name) === params.id);
+
+  if (!profile) return reply.code(404).send({ error: "Creator not found." });
+
+  const contributions = runtime.humanContributions.filter((item) => item.contributor.id === profile.id);
+  const discoveryIds = new Set(contributions.map((item) => item.insight.cardId));
+  const discoveries = runtime.cards.filter((card) => discoveryIds.has(card.id) || card.location.toLowerCase().includes(profile.city.toLowerCase()));
+
+  return {
+    profile,
+    contributions: contributions.map((item) => ({
+      id: item.insight.id,
+      note: item.insight.note,
+      emotionalContext: item.insight.emotionalContext,
+      culturalContext: item.insight.culturalContext,
+      localTiming: item.insight.localTiming,
+      trustScore: item.insight.trustScore,
+      cardId: item.insight.cardId
+    })),
+    discoveries: discoveries.slice(0, 8)
   };
 });
 
@@ -607,7 +927,9 @@ app.get("/freshness", async () => {
   };
 });
 
-app.get("/admin/overview", async () => {
+app.get("/admin/overview", async (request, reply) => {
+  const admin = await requireAdmin(request, reply);
+  if (!admin) return reply;
   const { runtime } = await getRuntimeState();
   const qualityPreview = scoreCardTotal({
     usefulness: 0.84,
@@ -634,7 +956,9 @@ app.get("/admin/overview", async () => {
   };
 });
 
-app.get("/admin/monitoring", async () => {
+app.get("/admin/monitoring", async (request, reply) => {
+  const admin = await requireAdmin(request, reply);
+  if (!admin) return reply;
   const { runtime, state } = await getRuntimeState();
   return {
     ingestion: {
@@ -663,15 +987,20 @@ app.get("/admin/monitoring", async () => {
   };
 });
 
-app.get("/plans", async () => {
+app.get("/plans", async (request) => {
   const { state } = await getRuntimeState();
+  const user = await resolveCurrentUser(request);
+  const items = state.plans.filter((plan) => planBelongsToUser(plan, user));
   return {
-    items: state.plans,
-    total: state.plans.length
+    items,
+    total: items.length
   };
 });
 
 app.post("/plans", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+
   const body = request.body as { title?: string; type?: AFRIKAPlan["type"]; userId?: string };
   const title = body.title?.trim() || pickPlanTitle(body.type ?? "weekend plan");
   const plan: AFRIKAPlan = {
@@ -683,26 +1012,32 @@ app.post("/plans", async (request, reply) => {
 
   const next = await writeState((state) => ({
     ...state,
-    plans: [plan, ...state.plans]
+    plans: [{ ...plan, userId: user.id }, ...state.plans]
   }));
 
-  return reply.code(201).send({ plan, total: next.plans.length });
+  return reply.code(201).send({ plan: { ...plan, userId: user.id }, total: next.plans.filter((item) => item.userId === user.id).length });
 });
 
 app.get("/plans/:id", async (request, reply) => {
   const params = request.params as { id: string };
+  const user = await resolveCurrentUser(request);
   const { state } = await getRuntimeState();
   const plan = state.plans.find((item) => item.id === params.id);
   if (!plan) return reply.code(404).send({ error: "Plan not found" });
+  if (!planBelongsToUser(plan, user)) return reply.code(403).send({ error: "You do not have access to this plan." });
   return plan;
 });
 
 app.patch("/plans/:id", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+
   const params = request.params as { id: string };
   const body = request.body as Partial<AFRIKAPlan>;
   const next = await writeState((state) => {
     const index = state.plans.findIndex((item) => item.id === params.id);
     if (index === -1) return state;
+    if (state.plans[index]!.userId !== user.id && user.role !== "admin") return state;
     state.plans[index] = {
       ...state.plans[index]!,
       ...body,
@@ -714,23 +1049,30 @@ app.patch("/plans/:id", async (request, reply) => {
 
   const plan = next.plans.find((item) => item.id === params.id);
   if (!plan) return reply.code(404).send({ error: "Plan not found" });
+  if (plan.userId !== user.id && user.role !== "admin") return reply.code(403).send({ error: "You do not have access to this plan." });
   return plan;
 });
 
 app.delete("/plans/:id", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+
   const params = request.params as { id: string };
   const { state } = await getRuntimeState();
-  const exists = state.plans.some((item) => item.id === params.id);
+  const exists = state.plans.some((item) => item.id === params.id && (item.userId === user.id || user.role === "admin"));
   if (!exists) return reply.code(404).send({ error: "Plan not found" });
 
   await writeState((state) => ({
     ...state,
-    plans: state.plans.filter((item) => item.id !== params.id)
+    plans: state.plans.filter((item) => !(item.id === params.id && (item.userId === user.id || user.role === "admin")))
   }));
   return { ok: true, deleted: true, id: params.id };
 });
 
 app.post("/plans/:id/items", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+
   const params = request.params as { id: string };
   const body = request.body as { title?: string; note?: string; cardId?: string };
   const item: PlanItem = {
@@ -743,21 +1085,27 @@ app.post("/plans/:id/items", async (request, reply) => {
   const next = await writeState((state) => {
     const plan = state.plans.find((item) => item.id === params.id);
     if (!plan) return state;
+    if (plan.userId !== user.id && user.role !== "admin") return state;
     plan.items = [...plan.items, item];
     return state;
   });
 
   const plan = next.plans.find((item) => item.id === params.id);
   if (!plan) return reply.code(404).send({ error: "Plan not found" });
+  if (plan.userId !== user.id && user.role !== "admin") return reply.code(403).send({ error: "You do not have access to this plan." });
   return { plan, item };
 });
 
 app.patch("/plans/:id/items/:itemId", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+
   const params = request.params as { id: string; itemId: string };
   const body = request.body as Partial<PlanItem>;
   const next = await writeState((state) => {
     const plan = state.plans.find((item) => item.id === params.id);
     if (!plan) return state;
+    if (plan.userId !== user.id && user.role !== "admin") return state;
     const index = plan.items.findIndex((item) => item.id === params.itemId);
     if (index === -1) return state;
     plan.items[index] = {
@@ -770,19 +1118,25 @@ app.patch("/plans/:id/items/:itemId", async (request, reply) => {
 
   const plan = next.plans.find((item) => item.id === params.id);
   if (!plan) return reply.code(404).send({ error: "Plan not found" });
+  if (plan.userId !== user.id && user.role !== "admin") return reply.code(403).send({ error: "You do not have access to this plan." });
   return plan.items.find((item) => item.id === params.itemId) ?? reply.code(404).send({ error: "Plan item not found" });
 });
 
 app.delete("/plans/:id/items/:itemId", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+
   const params = request.params as { id: string; itemId: string };
   const next = await writeState((state) => {
     const plan = state.plans.find((item) => item.id === params.id);
     if (!plan) return state;
+    if (plan.userId !== user.id && user.role !== "admin") return state;
     plan.items = plan.items.filter((item) => item.id !== params.itemId);
     return state;
   });
   const plan = next.plans.find((item) => item.id === params.id);
   if (!plan) return reply.code(404).send({ error: "Plan not found" });
+  if (plan.userId !== user.id && user.role !== "admin") return reply.code(403).send({ error: "You do not have access to this plan." });
   return { ok: true, deleted: true, id: params.itemId };
 });
 
@@ -795,6 +1149,9 @@ app.get("/sources", async () => {
 });
 
 app.post("/sources", async (request, reply) => {
+  const admin = await requireAdmin(request, reply);
+  if (!admin) return reply;
+
   const body = request.body as Partial<ApiState["sources"][number]>;
   if (!body.name?.trim() || !body.kind?.trim() || !body.url?.trim()) {
     return reply.code(400).send({ error: "Invalid source payload" });
@@ -821,6 +1178,9 @@ app.post("/sources", async (request, reply) => {
 });
 
 app.patch("/sources/:id", async (request, reply) => {
+  const admin = await requireAdmin(request, reply);
+  if (!admin) return reply;
+
   const params = request.params as { id: string };
   const body = request.body as Partial<ApiState["sources"][number]>;
   const next = await writeState((state) => {
@@ -839,6 +1199,9 @@ app.patch("/sources/:id", async (request, reply) => {
 });
 
 app.delete("/sources/:id", async (request, reply) => {
+  const admin = await requireAdmin(request, reply);
+  if (!admin) return reply;
+
   const params = request.params as { id: string };
   const { state } = await getRuntimeState();
   const exists = state.sources.some((item) => item.id === params.id);
@@ -851,7 +1214,10 @@ app.delete("/sources/:id", async (request, reply) => {
   return { ok: true, deleted: true, id: params.id };
 });
 
-app.get("/users", async () => {
+app.get("/users", async (request, reply) => {
+  const admin = await requireAdmin(request, reply);
+  if (!admin) return reply;
+
   const { state } = await getRuntimeState();
   return {
     items: state.users.map((user) => sanitizeUser(user)),
@@ -865,7 +1231,13 @@ app.get("/profiles/me", async (request) => {
 });
 
 app.patch("/users/:id", async (request, reply) => {
+  const user = await requireUser(request, reply);
+  if (!user) return reply;
+
   const params = request.params as { id: string };
+  if (user.role !== "admin" && user.id !== params.id) {
+    return reply.code(403).send({ error: "You do not have permission to edit this user." });
+  }
   const body = request.body as Partial<ApiState["users"][number]>;
   const next = await writeState((state) => {
     const index = state.users.findIndex((item) => item.id === params.id);
@@ -878,9 +1250,9 @@ app.patch("/users/:id", async (request, reply) => {
     };
     return state;
   });
-  const user = next.users.find((item) => item.id === params.id);
-  if (!user) return reply.code(404).send({ error: "User not found" });
-  return user;
+  const targetUser = next.users.find((item) => item.id === params.id);
+  if (!targetUser) return reply.code(404).send({ error: "User not found" });
+  return targetUser;
 });
 
 const port = Number(process.env.PORT ?? 4000);
