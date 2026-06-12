@@ -56,7 +56,7 @@ The platform should feel alive through useful intelligence, not random automatic
   - `afrika.ng`
   - `www.afrika.ng`
   - `admin.afrika.ng`
-  - `afrika.techculture.live`
-  - `afrika-ai.techculture.live`
+  - API service origin
+  - AI service origin
 - Web and admin call the server over public HTTPS endpoints
 - The server should allow CORS from the AFRIKA frontend origins

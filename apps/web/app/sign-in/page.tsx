@@ -23,7 +23,7 @@ export default function SignInPage() {
           </div>
           <h1 className="afrika-hero-title text-3xl">Sign in to your AFRIKA account</h1>
           <p className="mt-3 text-sm leading-6 text-white/65">
-            Sign in to sync your profile, saved places, and plans with the live API.
+            Sign in to keep your saved places, plans, and recent discoveries with you.
           </p>
 
           <form

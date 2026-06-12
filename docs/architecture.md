@@ -25,7 +25,7 @@ It should feel like Africa itself is updating in real time, but only with useful
 ## Deployment Topology
 
 - Vercel: web app at `afrika.ng` and `www.afrika.ng`, admin app at `admin.afrika.ng`
-- Server: API at `afrika.techculture.live`, AI at `afrika-ai.techculture.live`, ingestion as a private/internal service
+- Server: API and AI services run on dedicated origins, with ingestion as a private/internal service
 - Public frontends communicate with server services over HTTPS
 - CORS must allow the AFRIKA origins defined in environment variables
 

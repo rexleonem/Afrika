@@ -1,8 +1,9 @@
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ??
-  (process.env.NODE_ENV === "production" ? "https://afrika.techculture.live" : "http://localhost:4000");
+  (process.env.NODE_ENV === "production" ? "" : "http://localhost:4000");
 
 function joinUrl(path: string) {
+  if (!API_BASE_URL.trim()) return `/${path.replace(/^\//, "")}`;
   return `${API_BASE_URL.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 }
 

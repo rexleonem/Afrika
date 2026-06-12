@@ -34,6 +34,20 @@ function buildSeedCards(): StoredCard[] {
   });
 }
 
+function mergeSeedCards(cards: StoredCard[] | undefined) {
+  const seedCards = buildSeedCards();
+  if (!Array.isArray(cards) || cards.length === 0) return seedCards;
+  const seedIds = new Set(seedCards.map((card) => card.id));
+  return [...seedCards, ...cards.filter((card) => !seedIds.has(card.id))];
+}
+
+function mergeSeedPlans(plans: ApiState["plans"] | undefined) {
+  const seedPlans = samplePlans.map((plan) => ({ ...plan }));
+  if (!Array.isArray(plans) || plans.length === 0) return seedPlans;
+  const seedIds = new Set(seedPlans.map((plan) => plan.id));
+  return [...seedPlans, ...plans.filter((plan) => !seedIds.has(plan.id))];
+}
+
 function buildSeedState(): ApiState {
   return {
     cards: buildSeedCards(),
@@ -115,8 +129,8 @@ async function loadState() {
     return {
       ...buildSeedState(),
       ...parsed,
-      cards: Array.isArray(parsed.cards) && parsed.cards.length > 0 ? parsed.cards : buildSeedCards(),
-      plans: Array.isArray(parsed.plans) ? parsed.plans : samplePlans.map((plan) => ({ ...plan })),
+      cards: mergeSeedCards(parsed.cards),
+      plans: mergeSeedPlans(parsed.plans),
       sources: Array.isArray(parsed.sources) && parsed.sources.length > 0 ? parsed.sources : buildSeedState().sources,
       users: Array.isArray(parsed.users) && parsed.users.length > 0 ? parsed.users : buildSeedState().users,
       searchHistory: Array.isArray(parsed.searchHistory) ? parsed.searchHistory : []

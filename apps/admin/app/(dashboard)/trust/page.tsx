@@ -18,7 +18,7 @@ export default function TrustPage() {
           <MetricTile label="Profiles" value={snapshot?.contributors.length ?? 0} detail="Contributors in the network." />
           <MetricTile label="Verification" value={snapshot?.verification.length ?? 0} detail="Items awaiting trust review." />
           <MetricTile label="Stories" value={snapshot?.stories.length ?? 0} detail="Cultural stories published." />
-          <MetricTile label="Users" value={snapshot?.users.length ?? 0} detail="Known users in the API." />
+          <MetricTile label="Users" value={snapshot?.users.length ?? 0} detail="Known users in the system." />
         </div>
       </section>
 

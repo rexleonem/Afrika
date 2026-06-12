@@ -123,7 +123,11 @@ export default async function DiscoverDetailPage({ params }: DiscoverDetailPageP
   return (
     <main className="min-h-screen pb-24 lg:pb-12">
       <div className="relative overflow-hidden" style={{ minHeight: "72vh" }}>
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${cardImage})` }} />
+        {card.media.videoUrl ? (
+          <video className="absolute inset-0 h-full w-full object-cover" src={card.media.videoUrl} poster={cardImage} muted loop playsInline autoPlay />
+        ) : (
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${cardImage})` }} />
+        )}
         <div
           className="absolute inset-0"
           style={{

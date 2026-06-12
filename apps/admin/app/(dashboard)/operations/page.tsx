@@ -16,7 +16,7 @@ export default function OperationsPage() {
         />
         <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <MetricTile label="Cards" value={snapshot?.cards.length ?? 0} detail="Live cards in the content graph." />
-          <MetricTile label="Plans" value={snapshot?.plans.length ?? 0} detail="Planning records in the backend." />
+          <MetricTile label="Plans" value={snapshot?.plans.length ?? 0} detail="Planning records available to operations." />
           <MetricTile label="Moderation" value={snapshot?.moderation.length ?? 0} detail="Items awaiting review." />
           <MetricTile label="Sources" value={snapshot?.sources.length ?? 0} detail="Ingestion sources under management." />
         </div>

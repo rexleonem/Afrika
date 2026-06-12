@@ -55,7 +55,7 @@ Audit of the monorepo for placeholder UI, disconnected services, missing persist
 ## Repair Priority Order
 
 1. Fix compile errors introduced by backend persistence changes.
-2. Wire frontend pages to the live API.
+2. Wire frontend pages to live operational data.
 3. Add auth/session system.
 4. Expand validation and security controls.
 5. Finish production deployment checks.

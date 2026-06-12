@@ -128,10 +128,10 @@ export default function ProfilePage() {
               </div>
             </div>
             <h1 className="afrika-hero-title max-w-3xl text-3xl sm:text-4xl">
-              Your account now reflects real saved history, real plans, and real discovery signals.
+              Your account reflects the places, routes, and questions you keep returning to.
             </h1>
             <p className="max-w-2xl text-sm leading-7 text-white/65">
-              This profile is connected to live session data, saved plans, and recent searches from the backend.
+              Your saved plans and recent searches stay connected across the product.
             </p>
             <div className="flex flex-wrap gap-3">
               <button className="btn-secondary" onClick={() => void signOut()}>
@@ -143,7 +143,7 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <MetricTile label="Saved cards" value={`${savedCards.length}`} detail="Loaded from live API state." />
+            <MetricTile label="Saved cards" value={`${savedCards.length}`} detail="Places ready for a second look." />
             <MetricTile label="Plans" value={`${plans.length}`} detail="Stored persistently." />
             <MetricTile label="Searches" value={`${history.length}`} detail="Recent intent history." />
             <MetricTile label="Role" value={user.role.replace(/-/g, " ")} detail="Access level from session." />
@@ -155,11 +155,7 @@ export default function ProfilePage() {
         <div className="grid gap-8 xl:grid-cols-[1fr_300px]">
           <div className="space-y-8">
             <ScrollReveal>
-              <SectionHeader
-                eyebrow="Profile intelligence"
-                title="Your profile reads like the places you return to."
-                description="The screen reflects live session data instead of seed content."
-              />
+              <SectionHeader eyebrow="Profile intelligence" title="Your profile reads like the places you return to." />
               <div className="mt-5 flex flex-wrap gap-2">
                 {interestTags.map((tag) => (
                   <span key={tag} className="afrika-chip">{tag}</span>
@@ -217,7 +213,7 @@ export default function ProfilePage() {
             </ScrollReveal>
 
             <ScrollReveal>
-              <SectionHeader eyebrow="Saved discoveries" title="Cards backed by live data." />
+              <SectionHeader eyebrow="Saved discoveries" title="Places worth keeping close." />
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 {savedCards.length > 0 ? (
                   savedCards.map((card) => (
@@ -241,13 +237,13 @@ export default function ProfilePage() {
           <ContextPanel className="xl:sticky xl:top-6 xl:h-fit">
             <AIInsightPanel title="Account reading" live>
               <InsightRow title="Identity" detail={`${user.name} · ${user.role}`} accent />
-              <InsightRow title="Session" detail="Connected to the API-backed auth flow." accent />
-              <InsightRow title="Sync" detail="Plans, cards, and searches load from live state." accent />
+              <InsightRow title="Session" detail="Signed in and ready to sync." accent />
+              <InsightRow title="Sync" detail="Plans, cards, and searches stay available across visits." accent />
             </AIInsightPanel>
 
             <AIInsightPanel title="Profile summary">
               <p className="text-xs leading-5 text-white/65">
-                The profile page now reads actual session state rather than a static seed shell.
+                The profile now reflects your saved plans, searches, and discovery rhythm.
               </p>
             </AIInsightPanel>
           </ContextPanel>

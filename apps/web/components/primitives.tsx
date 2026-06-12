@@ -138,22 +138,27 @@ export function DiscoveryCard({
       }}
     >
       <Link href={href} className="block">
-        <div
-          className="relative overflow-hidden aspect-[4/5]"
-          style={{
-            backgroundImage: `url(${card.media.imageUrl})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          <div
-            className="absolute inset-0 group-hover:scale-105 transition-transform duration-500"
-            style={{
-              backgroundImage: `url(${card.media.imageUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          />
+        <div className="relative overflow-hidden aspect-[4/5]">
+          {card.media.videoUrl ? (
+            <video
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              src={card.media.videoUrl}
+              poster={card.media.imageUrl}
+              muted
+              loop
+              playsInline
+              autoPlay
+            />
+          ) : (
+            <div
+              className="absolute inset-0 group-hover:scale-105 transition-transform duration-500"
+              style={{
+                backgroundImage: `url(${card.media.imageUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            />
+          )}
           <div
             className="absolute inset-0"
             style={{

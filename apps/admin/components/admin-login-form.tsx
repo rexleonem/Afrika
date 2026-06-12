@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AmbientGlow } from "./motion/ambient-glow";
@@ -35,7 +34,7 @@ export function AdminLoginForm() {
           </div>
           <h1 className="afrika-hero-title text-4xl">Sign in to the AFRIKA admin center.</h1>
           <p className="max-w-xl text-sm leading-7 text-white/65">
-            This dashboard is restricted to admin sessions and reads from the live AFRIKA API.
+            This dashboard is restricted to admin sessions and live operational data.
           </p>
         </div>
 
@@ -84,12 +83,7 @@ export function AdminLoginForm() {
           </button>
         </form>
 
-        <div className="mt-6 flex items-center justify-between text-sm text-white/55">
-          <span>Need the production API?</span>
-          <Link href="https://afrika.techculture.live" className="underline decoration-white/30 underline-offset-4">
-            Open backend
-          </Link>
-        </div>
+        <div className="mt-6 text-sm text-white/55">Use an approved admin account to enter the control room.</div>
       </div>
     </main>
   );

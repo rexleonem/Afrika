@@ -4,8 +4,8 @@
 
 - Web app: Vercel at `afrika.ng` and `www.afrika.ng`
 - Admin app: Vercel at `admin.afrika.ng`
-- API service: dedicated server at `afrika.techculture.live`
-- AI service: dedicated server at `afrika-ai.techculture.live`
+- API service: dedicated server
+- AI service: dedicated server
 - Ingestion service: dedicated server or worker host, usually private/internal
 
 ## Environment Variables
@@ -25,7 +25,7 @@ Important values:
 
 - enable CORS for `https://afrika.ng`, `https://www.afrika.ng`, and `https://admin.afrika.ng`
 - expose HTTPS public endpoints
-- keep API and AI URLs stable for frontend config
+- keep service origins stable for frontend config
 
 ## Vercel Requirements
 

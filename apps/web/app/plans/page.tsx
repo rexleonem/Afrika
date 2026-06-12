@@ -126,7 +126,7 @@ export default function PlansPage() {
             </ScrollReveal>
 
             {loading ? (
-              <div className="afrika-panel p-5 text-sm text-white/60">Loading plans from the live API…</div>
+              <div className="afrika-panel p-5 text-sm text-white/60">Loading your plans...</div>
             ) : (
               <StaggerContainer className="space-y-5">
                 {plans.map((plan, planIdx) => (

@@ -41,14 +41,26 @@ export function DiscoveryCard({
       transition={{ type: "spring", damping: 22, stiffness: 220 }}
     >
       <Link href={href} className="block">
-        {/* Image */}
+        {/* Media */}
         <div className={`relative overflow-hidden ${aspectRatio}`}>
-          <motion.div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${card.media.imageUrl})` }}
-            whileHover={{ scale: 1.06 }}
-            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-          />
+          {card.media.videoUrl ? (
+            <video
+              className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+              src={card.media.videoUrl}
+              poster={card.media.imageUrl}
+              muted
+              loop
+              playsInline
+              autoPlay
+            />
+          ) : (
+            <motion.div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${card.media.imageUrl})` }}
+              whileHover={{ scale: 1.06 }}
+              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            />
+          )}
 
           {/* Gradient overlay */}
           <div

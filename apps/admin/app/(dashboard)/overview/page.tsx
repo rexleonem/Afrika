@@ -14,13 +14,13 @@ export default function OverviewPage() {
           <div className="space-y-5">
             <div className="flex flex-wrap gap-2">
               <span className="afrika-chip">Control room</span>
-              <span className="afrika-chip">Live API</span>
+              <span className="afrika-chip">Live data</span>
               <span className="afrika-chip">Multi-stage intelligence</span>
             </div>
             <div className="afrika-label">Overview</div>
             <h1 className="afrika-hero-title max-w-3xl text-4xl">A real operational surface for AFRIKA, not a blank shell.</h1>
             <p className="max-w-2xl text-sm leading-7 text-white/65 sm:text-base">
-              The admin now reads from the live API, enforces admin access, and exposes multi-page operations for ingestion, model work, analytics, and trust.
+              The admin now enforces access and exposes multi-page operations for ingestion, model work, analytics, and trust.
             </p>
             <div className="flex flex-wrap gap-2">
               <SignalBadge label="Cards" value={snapshot?.overview.cardsInGraph ?? 0} />
@@ -31,7 +31,7 @@ export default function OverviewPage() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <MetricTile label="Cards" value={snapshot?.overview.cardsInGraph ?? 0} detail="Active cards in the live graph." />
-            <MetricTile label="Trends" value={snapshot?.overview.activeTrends ?? 0} detail="Trend signals from the API." />
+            <MetricTile label="Trends" value={snapshot?.overview.activeTrends ?? 0} detail="Trend signals in the live graph." />
             <MetricTile label="Stories" value={snapshot?.overview.culturalStories ?? 0} detail="Cultural narratives surfaced." />
             <MetricTile label="Ops" value={snapshot?.overview.actionSignals ?? 0} detail="Real action signals and orchestration." />
           </div>
@@ -78,7 +78,7 @@ export default function OverviewPage() {
           <SectionHeader
             eyebrow="Live content"
             title="The top cards are now visible as operational objects."
-            description="Use these records to verify that the API, not a seed list, powers the dashboard."
+            description="Use these records to verify the dashboard is reading operational data."
           />
           <div className="mt-5 grid gap-3">
             {snapshot?.cards.slice(0, 4).map((card) => (
