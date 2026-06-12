@@ -2,7 +2,13 @@ import { ScrollReveal } from "../../../components/motion/scroll-reveal";
 import { SectionHeader } from "../../../components/primitives";
 import { AmbientGlow } from "../../../components/motion/ambient-glow";
 
-export default function CreatorPage({ params }: { params: { id: string } }) {
+type CreatorPageProps = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function CreatorPage({ params }: CreatorPageProps) {
+  const { id } = await params;
+
   return (
     <main className="pb-24 lg:pb-12">
       {/* Hero Section */}
@@ -23,7 +29,7 @@ export default function CreatorPage({ params }: { params: { id: string } }) {
           <div className="pb-2">
             <div className="afrika-label mb-2">Curator</div>
             <h1 className="text-3xl font-semibold text-white tracking-tight" style={{ fontFamily: "var(--font-display), serif" }}>
-              @{params.id}
+              @{id}
             </h1>
             <p className="text-sm text-white/70 mt-1">Discovering the hidden layers of the city.</p>
           </div>
