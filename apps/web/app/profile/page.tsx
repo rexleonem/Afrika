@@ -43,6 +43,7 @@ type HistoryItem = {
     title: string;
     location: string;
     category: string;
+    media: { imageUrl: string };
   };
 };
 
@@ -253,9 +254,12 @@ export default function ProfilePage() {
                   <p className="text-sm leading-6 text-white/60">Your recent card views will appear here once you open a few discoveries.</p>
                 ) : (
                   history.map((item) => (
-                    <Link key={item.id} href={`/discover/${item.card.id}`} className="block rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                      <div className="text-sm font-medium text-white">{item.card.title}</div>
-                      <div className="mt-1 text-xs uppercase tracking-[0.28em] text-white/45">{item.card.location}</div>
+                    <Link key={item.id} href={`/discover/${item.card.id}`} className="block overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                      <div className="aspect-[16/9] bg-cover bg-center" style={{ backgroundImage: `url(${item.card.media.imageUrl})` }} />
+                      <div className="px-4 py-3">
+                        <div className="text-sm font-medium text-white">{item.card.title}</div>
+                        <div className="mt-1 text-xs uppercase tracking-[0.28em] text-white/45">{item.card.location}</div>
+                      </div>
                     </Link>
                   ))
                 )}

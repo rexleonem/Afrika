@@ -5,10 +5,11 @@ import { featuredCards, samplePlans } from "@afrika/shared/content";
 import { freshnessStatus, scoreCardTotal } from "@afrika/shared/stage2";
 import type { AFRIKACard } from "@afrika/shared/types";
 import { enrichCard } from "@afrika/shared/stage2";
-import type { ApiState, StoredCard } from "./types.js";
+import type { ApiHeroContent, ApiState, StoredCard } from "./types.js";
 import { hashPassword } from "./auth.js";
 
 const stateFile = resolve(process.cwd(), process.env.API_STATE_FILE ?? "data/api-state.json");
+const heroSeedUpdatedAt = "2026-06-14T00:00:00.000Z";
 
 function buildSeedCards(): StoredCard[] {
   return featuredCards.map((card, index) => {
@@ -46,6 +47,25 @@ function mergeSeedPlans(plans: ApiState["plans"] | undefined) {
   if (!Array.isArray(plans) || plans.length === 0) return seedPlans;
   const seedIds = new Set(seedPlans.map((plan) => plan.id));
   return [...seedPlans, ...plans.filter((plan) => !seedIds.has(plan.id))];
+}
+
+function buildSeedHero(cards = featuredCards): ApiHeroContent {
+  const featuredCard = cards.find((card) => card.id === "jemaa-el-fnaa-marrakech") ?? cards[0]!;
+
+  return {
+    id: "hero-default",
+    eyebrow: "Evening pulse",
+    title: "Start with the place that explains the whole rhythm around it.",
+    description:
+      "Jemaa el-Fnaa is the kind of square that makes a city readable in minutes. AFRIKA can surface places like this first, then pull you toward whatever is closest, calmer, or more useful from where you are standing.",
+    imageUrl: featuredCard.media.imageUrl,
+    videoUrl: featuredCard.media.videoUrl,
+    alt: featuredCard.media.alt,
+    locationLabel: featuredCard.location,
+    featuredCardId: featuredCard.id,
+    chips: ["Live city signal", "Nommo guided", "Editor pick"],
+    updatedAt: heroSeedUpdatedAt
+  };
 }
 
 function buildSeedState(): ApiState {
@@ -115,7 +135,8 @@ function buildSeedState(): ApiState {
     ],
     searchHistory: [],
     saves: [],
-    viewHistory: []
+    viewHistory: [],
+    hero: buildSeedHero()
   };
 }
 
@@ -141,7 +162,8 @@ async function loadState() {
       users: Array.isArray(parsed.users) && parsed.users.length > 0 ? parsed.users : buildSeedState().users,
       searchHistory: Array.isArray(parsed.searchHistory) ? parsed.searchHistory : [],
       saves: Array.isArray(parsed.saves) ? parsed.saves : [],
-      viewHistory: Array.isArray(parsed.viewHistory) ? parsed.viewHistory : []
+      viewHistory: Array.isArray(parsed.viewHistory) ? parsed.viewHistory : [],
+      hero: parsed.hero ? { ...buildSeedHero(), ...parsed.hero } : buildSeedHero()
     } satisfies ApiState;
   } catch {
     const seed = buildSeedState();
