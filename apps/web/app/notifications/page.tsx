@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import type { Route } from "next";
 import { apiFetch } from "../../lib/api";
 import { useSession } from "../../components/session-provider";
 import { ScrollReveal } from "../../components/motion/scroll-reveal";
@@ -12,7 +13,7 @@ type NotificationItem = {
   kind: string;
   title: string;
   body: string;
-  href: string;
+  href: `/${string}`;
   createdAt: string;
 };
 
@@ -97,7 +98,7 @@ export default function NotificationsPage() {
       ) : (
         <div className="mt-10 space-y-4">
           {items.map((item) => (
-            <Link key={item.id} href={item.href} className="afrika-panel block p-5">
+            <Link key={item.id} href={item.href as Route} className="afrika-panel block p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="afrika-label">{item.kind}</div>

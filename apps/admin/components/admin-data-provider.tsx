@@ -246,6 +246,17 @@ export type AdminSnapshot = {
   };
 };
 
+type AdminFeedResponse = {
+  items: AdminCard[];
+  meta?: {
+    totalCards?: number;
+  };
+};
+
+type AdminStageEnvelope<TStage, TKey extends string> = Record<TKey, TStage> & {
+  summary?: string;
+};
+
 type AdminDataState = {
   status: "loading" | "ready" | "error";
   error: string | null;
@@ -421,7 +432,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       ] = await Promise.all([
         apiFetch<AdminSnapshot["overview"]>("/admin/overview"),
         apiFetch<AdminSnapshot["monitoring"]>("/admin/monitoring"),
-        apiFetch<AdminSnapshot["feed"]>("/feed?limit=12"),
+        apiFetch<AdminFeedResponse>("/feed?limit=12"),
         apiFetch<{ items: AdminCard[] }>("/cards?limit=12"),
         apiFetch<{ items: AdminPlan[] }>("/plans"),
         apiFetch<{ items: AdminSnapshot["searches"] }>("/search/history"),
@@ -432,17 +443,20 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
         apiFetch<{ items: AdminSnapshot["stories"] }>("/stories"),
         apiFetch<{ items: AdminSnapshot["moderation"] }>("/moderation"),
         apiFetch<{ items: AdminSnapshot["users"] }>("/users"),
-        apiFetch<AdminSnapshot["stage7"]>("/stage7"),
-        apiFetch<AdminSnapshot["stage8"]>("/stage8"),
-        apiFetch<AdminSnapshot["stage9"]>("/stage9"),
-        apiFetch<AdminSnapshot["stage10"]>("/stage10"),
-        apiFetch<AdminSnapshot["stage11"]>("/stage11")
+        apiFetch<AdminStageEnvelope<AdminSnapshot["stage7"], "stage7">>("/stage7"),
+        apiFetch<AdminStageEnvelope<AdminSnapshot["stage8"], "stage8">>("/stage8"),
+        apiFetch<AdminStageEnvelope<AdminSnapshot["stage9"], "stage9">>("/stage9"),
+        apiFetch<AdminStageEnvelope<AdminSnapshot["stage10"], "stage10">>("/stage10"),
+        apiFetch<AdminStageEnvelope<AdminSnapshot["stage11"], "stage11">>("/stage11")
       ]);
 
       setSnapshot({
         overview,
         monitoring,
-        feed,
+        feed: {
+          items: feed.items,
+          totalCards: feed.meta?.totalCards ?? feed.items.length
+        },
         cards: cards.items,
         plans: plans.items,
         searches: searches.items,
@@ -453,11 +467,11 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
         stories: stories.items,
         moderation: moderation.items,
         users: users.items,
-        stage7,
-        stage8,
-        stage9,
-        stage10,
-        stage11
+        stage7: stage7.stage7,
+        stage8: stage8.stage8,
+        stage9: stage9.stage9,
+        stage10: stage10.stage10,
+        stage11: stage11.stage11
       });
       setStatus("ready");
     } catch (err) {

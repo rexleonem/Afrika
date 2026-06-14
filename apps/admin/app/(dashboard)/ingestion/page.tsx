@@ -12,7 +12,7 @@ export default function IngestionPage() {
         <SectionHeader
           eyebrow="Ingestion monitoring"
           title="Crawlers, sources, and freshness are visible as live runtime state."
-          description="This page shows the background discovery engine instead of a fake monitoring mock."
+          description="Watch the discovery engine as it pulls, checks, and refreshes live signals across the network."
         />
         <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <MetricTile label="Active crawlers" value={snapshot?.monitoring.ingestion.activeCrawlers ?? 0} detail="Sources actively crawling." />

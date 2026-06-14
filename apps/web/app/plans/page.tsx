@@ -100,7 +100,7 @@ export default function PlansPage() {
               Plans that feel like elegant boards, not forms.
             </h1>
             <p className="max-w-xl text-base leading-7 text-white/65">
-              The plan layer now reads and writes against the live API instead of showing sample routes in a vacuum.
+              Build a route, a slow weekend, or a running list of places you do not want to lose.
             </p>
           </div>
           <AIInsightPanel title="Fulfillment signal" live>

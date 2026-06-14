@@ -12,6 +12,8 @@ async function proxy(request: Request, context: { params: Promise<{ path: string
   const forwardedHeaders = new Headers(request.headers);
   forwardedHeaders.delete("host");
   forwardedHeaders.delete("content-length");
+  forwardedHeaders.delete("connection");
+  forwardedHeaders.delete("expect");
 
   const upstream = await fetch(targetUrl, {
     method: request.method,

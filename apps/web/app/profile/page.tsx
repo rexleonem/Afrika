@@ -168,7 +168,7 @@ export default function ProfilePage() {
               <SectionHeader
                 eyebrow="Saved plans"
                 title="What you're actively putting together."
-                description="Every plan below is coming from the live API, not a placeholder board."
+                description="Keep the places, plans, and patterns that are starting to feel like yours."
               />
             </ScrollReveal>
 

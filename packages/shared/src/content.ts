@@ -264,6 +264,43 @@ export const featuredCards: AFRIKACard[] = [
     lastVerifiedAt: verifiedAt
   },
   {
+    id: "nairobi-work-ecosystem",
+    title: "Nairobi Work Ecosystem",
+    location: "Kilimani and Westlands, Nairobi",
+    category: "Startup and remote work insight",
+    kind: "opportunity",
+    tags: ["startup", "coworking", "remote work", "founders", "kilimani", "westlands"],
+    coordinates: { lat: -1.2899, lng: 36.7898 },
+    timestamp: "2026-06-12T08:28:30.000Z",
+    media: {
+      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Nairobi_skyline.jpg/1400px-Nairobi_skyline.jpg",
+      alt: "Nairobi skyline with commercial towers"
+    },
+    intelligence: {
+      summary:
+        "Kilimani and Westlands hold much of Nairobi's visible remote-work and startup rhythm, shaped by coworking spaces, founder meetups, and a reliable stream of cafes used as informal workrooms.",
+      whyItMatters:
+        "For people choosing where to work, meet, or plug into Nairobi's startup scene, this corridor gives the clearest mix of access, community, and everyday usefulness.",
+      nearbyInsights: [
+        "Coworking density is stronger on weekdays than weekends",
+        "Traffic timing changes the whole experience, especially late afternoon",
+        "Good fit for meetings, founder coffees, and repeat work sessions"
+      ],
+      recommendations: [
+        "Pair this with a quiet cafe search",
+        "Use it as a base for short work-focused stays",
+        "Compare Kilimani's pace with Westlands before choosing a routine"
+      ],
+      comparison:
+        "More work-shaped than a single venue and more flexible than relying on hotel lobbies or one-off cafe stops."
+    },
+    freshnessScore: 0.9,
+    trustScore: 0.86,
+    relevanceScore: 0.91,
+    decayRate: 0.07,
+    lastVerifiedAt: verifiedAt
+  },
+  {
     id: "kigali-genocide-memorial",
     title: "Kigali Genocide Memorial",
     location: "Gisozi, Kigali",
