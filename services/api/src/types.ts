@@ -62,6 +62,20 @@ export type ViewHistoryRecord = {
   createdAt: string;
 };
 
+export type ApiHeroContent = {
+  id: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  videoUrl?: string;
+  alt: string;
+  locationLabel: string;
+  featuredCardId?: string;
+  chips: string[];
+  updatedAt: string;
+};
+
 export type ApiState = {
   cards: StoredCard[];
   plans: StoredPlan[];
@@ -70,6 +84,7 @@ export type ApiState = {
   searchHistory: SearchHistoryRecord[];
   saves: SavedCardRecord[];
   viewHistory: ViewHistoryRecord[];
+  hero: ApiHeroContent;
 };
 
 export type AFRIKACardInput = Pick<

@@ -15,15 +15,74 @@ import { AmbientGlow } from "../components/motion/ambient-glow";
 import { ScrollReveal, StaggerContainer, staggerItem } from "../components/motion/scroll-reveal";
 import { AIInsightPanel, ContextPanel } from "../components/panels/ai-insight-panel";
 import { apiFetch } from "../lib/api";
+import { buildLocationQuery, useLocationContext } from "../lib/location-context";
 
 type FeedResponse = {
   items: AFRIKACard[];
 };
 
+type HeroContent = {
+  id: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  videoUrl?: string;
+  alt: string;
+  locationLabel: string;
+  featuredCardId?: string;
+  chips: string[];
+  updatedAt: string;
+};
+
+type HeroResponse = {
+  hero: HeroContent;
+  featuredCard: AFRIKACard | null;
+};
+
+function formatLocationSignal(cardCount: number, locationLabel: string | null, source?: string) {
+  if (!locationLabel) {
+    return cardCount > 0 ? "Live signals across African cities" : "Loading live city signals";
+  }
+
+  if (source === "gps") return `Near ${locationLabel}`;
+  return `Around ${locationLabel}`;
+}
+
 export default function HomePage() {
   const [cards, setCards] = useState<AFRIKACard[]>([]);
+  const [hero, setHero] = useState<HeroContent | null>(null);
+  const [heroCard, setHeroCard] = useState<AFRIKACard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { effectiveLocation, geolocationStatus, requestPreciseLocation, isLocating } = useLocationContext();
+
+  const locationQuery = useMemo(() => buildLocationQuery(effectiveLocation), [effectiveLocation]);
+  const locationLabel = useMemo(() => {
+    if (!effectiveLocation) return null;
+    if (effectiveLocation.label?.trim()) return effectiveLocation.label;
+    return [effectiveLocation.city, effectiveLocation.country].filter(Boolean).join(", ") || null;
+  }, [effectiveLocation]);
+
+  useEffect(() => {
+    let active = true;
+
+    void apiFetch<HeroResponse>("/hero")
+      .then((response) => {
+        if (!active) return;
+        setHero(response.hero);
+        setHeroCard(response.featuredCard);
+      })
+      .catch(() => {
+        if (!active) return;
+        setHero(null);
+        setHeroCard(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -32,7 +91,8 @@ export default function HomePage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await apiFetch<FeedResponse>("/feed?limit=24");
+        const query = locationQuery ? `/feed?limit=24&${locationQuery}` : "/feed?limit=24";
+        const response = await apiFetch<FeedResponse>(query);
         if (!active) return;
         setCards(response.items);
       } catch (err) {
@@ -49,7 +109,7 @@ export default function HomePage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [locationQuery]);
 
   const enrichedCards = useMemo(
     () =>
@@ -82,10 +142,25 @@ export default function HomePage() {
   );
   const culturalStories = useMemo(() => (cards.length ? generateCulturalStories(cards, []) : []), [cards]);
 
-  const leadCard = enrichedCards[0];
-  const feedCards = enrichedCards.slice(1, 7);
+  const leadCard = enrichedCards[0] ?? null;
+  const heroLeadCard = heroCard ?? leadCard;
+  const feedCards = enrichedCards.filter((card) => card.id !== heroLeadCard?.id).slice(0, 6);
   const trendCards = enrichedCards.slice(0, 10);
-  const tickerItems = enrichedCards.slice(0, 8).map((card) => `${card.location} · ${card.title}`);
+  const tickerItems = [
+    formatLocationSignal(enrichedCards.length, locationLabel, effectiveLocation?.source),
+    ...enrichedCards.slice(0, 7).map((card) => `${card.location} · ${card.title}`)
+  ];
+
+  const heroImage = hero?.imageUrl ?? heroLeadCard?.media.imageUrl ?? null;
+  const heroVideo = hero?.videoUrl ?? heroLeadCard?.media.videoUrl ?? undefined;
+  const heroTitle = hero?.title ?? "See what is actually pulling people, ideas, and attention across African cities.";
+  const heroDescription =
+    hero?.description ??
+    "AFRIKA brings the place, the context, and the next move together, so discovery feels grounded instead of noisy.";
+  const heroEyebrow = hero?.eyebrow ?? "Living discovery feed";
+  const heroChips = hero?.chips?.length ? hero.chips : ["Live city signal", "Nommo guided", "Editor pick"];
+  const heroLocation = hero?.locationLabel ?? heroLeadCard?.location ?? locationLabel ?? "Across African cities";
+  const heroHref = heroLeadCard ? (`/discover/${heroLeadCard.id}` as `/discover/${string}`) : ("/search" as const);
 
   return (
     <main className="pb-24 lg:pb-12">
@@ -97,20 +172,33 @@ export default function HomePage() {
         <AmbientGlow variant="forest" size="lg" className="right-[10%] top-[14%]" opacity={0.28} animationDelay="-4s" />
         <AmbientGlow variant="clay" size="md" className="bottom-[16%] left-[52%]" opacity={0.24} animationDelay="-8s" />
 
-        {leadCard ? (
+        {heroVideo ? (
+          <video
+            className="absolute inset-0 h-full w-full object-cover"
+            src={heroVideo}
+            poster={heroImage ?? undefined}
+            muted
+            loop
+            playsInline
+            autoPlay
+          />
+        ) : heroImage ? (
           <div
             className="absolute inset-0"
             style={{
-              backgroundImage: `url(${leadCard.media.imageUrl})`,
+              backgroundImage: `url(${heroImage})`,
               backgroundSize: "cover",
-              backgroundPosition: "center 32%",
-              opacity: 0.18
+              backgroundPosition: "center 34%"
             }}
           />
         ) : null}
+
         <div
           className="absolute inset-0"
-          style={{ background: "linear-gradient(180deg, transparent 0%, rgba(8,8,10,0.90) 82%)" }}
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(8,8,10,0.18) 0%, rgba(8,8,10,0.30) 38%, rgba(8,8,10,0.92) 88%), linear-gradient(90deg, rgba(8,8,10,0.58) 0%, rgba(8,8,10,0.12) 55%)"
+          }}
         />
 
         <div
@@ -118,7 +206,7 @@ export default function HomePage() {
           style={{ borderColor: "var(--border-subtle)", background: "var(--bg-glass)", backdropFilter: "blur(12px)" }}
         >
           <div className="flex whitespace-nowrap py-2.5" style={{ animation: "ticker-scroll 35s linear infinite" }}>
-            {(tickerItems.length > 0 ? tickerItems : ["Loading live city signals"]).map((item, index) => (
+            {tickerItems.map((item, index) => (
               <span
                 key={`${item}-${index}`}
                 className="px-6 text-[10px] font-medium uppercase tracking-[0.28em]"
@@ -139,27 +227,55 @@ export default function HomePage() {
             className="space-y-6 pt-24"
           >
             <div className="flex flex-wrap gap-2">
-              {["Living discovery feed", "Nommo-guided context", "Real places and signals"].map((chip) => (
+              {heroChips.map((chip) => (
                 <span key={chip} className="afrika-chip">
                   {chip}
                 </span>
               ))}
+              <span className="afrika-chip">{heroLocation}</span>
+              {effectiveLocation?.source === "gps" ? <span className="afrika-chip">Exact location on</span> : null}
             </div>
 
-            <h1 className="afrika-hero-title max-w-4xl">
-              See what is actually pulling people, ideas, and attention across African cities.
-            </h1>
+            <div className="space-y-3">
+              <div className="text-xs font-medium uppercase tracking-[0.42em] text-white/55">{heroEyebrow}</div>
+              <h1 className="afrika-hero-title max-w-4xl">{heroTitle}</h1>
+            </div>
 
             <p className="max-w-2xl text-base leading-7 sm:text-lg" style={{ color: "var(--text-secondary)" }}>
-              AFRIKA brings the place, the context, and the next move together, so discovery feels grounded instead of noisy.
+              {heroDescription}
             </p>
 
+            <div className="flex flex-wrap gap-3 text-xs text-white/70">
+              {locationLabel ? (
+                <span className="rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-sm">
+                  {effectiveLocation?.source === "gps" ? `Using your exact position near ${locationLabel}` : `Reading from ${locationLabel}`}
+                </span>
+              ) : (
+                <span className="rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-sm">
+                  Wide-angle discovery across the current graph
+                </span>
+              )}
+
+              {geolocationStatus === "prompt" && effectiveLocation?.source !== "gps" ? (
+                <button
+                  type="button"
+                  onClick={() => void requestPreciseLocation()}
+                  className="rounded-full border border-white/10 bg-white/10 px-3 py-2 text-white transition hover:border-white/20 hover:bg-white/15"
+                >
+                  {isLocating ? "Finding your exact spot..." : "Use exact location"}
+                </button>
+              ) : null}
+
+              {geolocationStatus === "denied" ? (
+                <span className="rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-sm">
+                  Exact location is blocked in this browser.
+                </span>
+              ) : null}
+            </div>
+
             <div className="flex flex-wrap items-center gap-4">
-              <Link
-                href={(leadCard ? `/discover/${leadCard.id}` : "/search") as `/discover/${string}` | "/search"}
-                className="btn-primary"
-              >
-                Start with what is moving now
+              <Link href={heroHref} className="btn-primary">
+                Start with this place
               </Link>
               <Link href={"/map" as const} className="btn-secondary">
                 Open the map
@@ -174,9 +290,12 @@ export default function HomePage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="absolute bottom-20 right-6 hidden xl:block"
-            style={{ width: 280 }}
+            style={{ width: 320 }}
           >
-            <div className="rounded-[24px] p-5" style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", boxShadow: "var(--shadow-card)" }}>
+            <div
+              className="rounded-[24px] p-5"
+              style={{ background: "var(--bg-glass)", border: "1px solid var(--border-default)", boxShadow: "var(--shadow-card)" }}
+            >
               <div className="mb-2 flex items-center justify-between">
                 <div className="afrika-label">Right now</div>
                 <span className="afrika-chip">Live</span>
@@ -185,6 +304,7 @@ export default function HomePage() {
                 {ambientIntelligence.adaptiveInterface.mode.replace(/-/g, " ")}
               </div>
               <p className="mt-2 text-sm leading-6 text-white/60">{ambientIntelligence.adaptiveInterface.tone}</p>
+              {locationLabel ? <p className="mt-3 text-xs leading-5 text-white/45">Closest read: {locationLabel}</p> : null}
             </div>
           </motion.div>
         ) : null}
@@ -195,7 +315,11 @@ export default function HomePage() {
           <SectionHeader
             eyebrow="Live feed"
             title="Places people keep returning to, with the context that makes them useful."
-            description="Every card here is coming from the active discovery graph."
+            description={
+              locationLabel
+                ? `The feed is leaning toward ${locationLabel} first, then widening out into the rest of the graph.`
+                : "Every card here is coming from the active discovery graph."
+            }
             action={
               <Link href={"/search" as const} className="btn-secondary text-sm">
                 Browse the full feed
@@ -210,17 +334,18 @@ export default function HomePage() {
           <div className="afrika-panel border-red-500/20 bg-red-500/5 p-8 text-sm text-red-100">{error}</div>
         ) : null}
 
-        {leadCard ? (
+        {heroLeadCard ? (
           <div className="grid gap-8 xl:grid-cols-[1fr_320px]">
             <div className="space-y-6">
               <ScrollReveal>
-                <Link href={`/discover/${leadCard.id}` as `/discover/${string}`} className="block">
+                <Link href={`/discover/${heroLeadCard.id}` as `/discover/${string}`} className="block">
                   <NeighborhoodCard
-                    title={leadCard.title}
-                    description={leadCard.intelligence.summary}
-                    location={leadCard.location}
-                    imageUrl={leadCard.media.imageUrl}
-                    tags={leadCard.tags}
+                    title={heroLeadCard.title}
+                    description={heroLeadCard.intelligence.summary}
+                    location={heroLeadCard.location}
+                    imageUrl={heroLeadCard.media.imageUrl}
+                    videoUrl={heroLeadCard.media.videoUrl}
+                    tags={heroLeadCard.tags}
                   />
                 </Link>
               </ScrollReveal>
@@ -293,6 +418,7 @@ export default function HomePage() {
                     location={card.location}
                     tag={card.kind}
                     imageUrl={card.media.imageUrl}
+                    videoUrl={card.media.videoUrl}
                     trend={index === 0 ? "Rising fast" : index === 1 ? "People are saving this" : undefined}
                   />
                 </Link>
@@ -346,7 +472,7 @@ export default function HomePage() {
             />
             <SectionHeader eyebrow="How the graph is reading the moment" title="A quick read on freshness, city momentum, and local trust." />
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <MetricTile label="Freshness" value={leadCard ? freshnessStatus(leadCard.freshnessScore) : "warming"} detail="Signals soften when the information gets old." />
+              <MetricTile label="Freshness" value={heroLeadCard ? freshnessStatus(heroLeadCard.freshnessScore) : "warming"} detail="Signals soften when the information gets old." />
               <MetricTile
                 label="Strongest city"
                 value={cityIntelligence[0]?.city ?? "Loading"}

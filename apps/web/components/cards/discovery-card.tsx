@@ -224,13 +224,14 @@ type TrendCardProps = {
   location: string;
   tag: string;
   imageUrl: string;
+  videoUrl?: string;
   trend?: string;
 };
 
-export function TrendCard({ title, location, tag, imageUrl, trend }: TrendCardProps) {
+export function TrendCard({ title, location, tag, imageUrl, videoUrl, trend }: TrendCardProps) {
   return (
     <motion.article
-      className="relative flex-shrink-0 overflow-hidden cursor-pointer"
+      className="group relative flex-shrink-0 overflow-hidden cursor-pointer"
       style={{
         width: 220,
         height: 280,
@@ -241,10 +242,22 @@ export function TrendCard({ title, location, tag, imageUrl, trend }: TrendCardPr
       whileHover={{ y: -4, scale: 1.02 }}
       transition={{ type: "spring", damping: 22, stiffness: 220 }}
     >
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${imageUrl})` }}
-      />
+      {videoUrl ? (
+        <video
+          className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+          src={videoUrl}
+          poster={imageUrl}
+          muted
+          loop
+          playsInline
+          autoPlay
+        />
+      ) : (
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${imageUrl})` }}
+        />
+      )}
       <div
         className="absolute inset-0"
         style={{
@@ -289,10 +302,11 @@ type NeighborhoodCardProps = {
   description: string;
   location: string;
   imageUrl: string;
+  videoUrl?: string;
   tags?: string[];
 };
 
-export function NeighborhoodCard({ title, description, location, imageUrl, tags }: NeighborhoodCardProps) {
+export function NeighborhoodCard({ title, description, location, imageUrl, videoUrl, tags }: NeighborhoodCardProps) {
   return (
     <motion.article
       className="group relative overflow-hidden cursor-pointer"
@@ -305,12 +319,24 @@ export function NeighborhoodCard({ title, description, location, imageUrl, tags 
       transition={{ type: "spring", damping: 22, stiffness: 220 }}
     >
       <div className="relative overflow-hidden aspect-[16/8]">
-        <motion.div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${imageUrl})` }}
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-        />
+        {videoUrl ? (
+          <video
+            className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+            src={videoUrl}
+            poster={imageUrl}
+            muted
+            loop
+            playsInline
+            autoPlay
+          />
+        ) : (
+          <motion.div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${imageUrl})` }}
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+          />
+        )}
         <div
           className="absolute inset-0"
           style={{

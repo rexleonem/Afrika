@@ -5,7 +5,7 @@ import { interpretSearch, scoreCardTotal } from "@afrika/shared/stage2";
 import type { AFRIKACard, AFRIKAPlan, PlanItem } from "@afrika/shared/types";
 import { buildStore } from "./store.js";
 import { createCardFromInput, readState, sortCards, writeState } from "./repository.js";
-import type { ApiState, ApiUser, SearchHistoryRecord, StoredCard } from "./types.js";
+import type { ApiHeroContent, ApiState, ApiUser, SearchHistoryRecord, StoredCard } from "./types.js";
 import { clearSessionCookie, createSessionToken, hashPassword, readSessionUserId, sanitizeUser, setSessionCookie, verifyPassword } from "./auth.js";
 
 const app = Fastify({ logger: true });
@@ -20,7 +20,7 @@ await app.register(cors, {
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     if (/^https:\/\/.*\.vercel\.app$/.test(origin)) return callback(null, true);
-    if (/^http:\/\/localhost:\d+$/.test(origin)) return callback(null, true);
+    if (/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) return callback(null, true);
     return callback(null, false);
   },
   credentials: true
@@ -35,6 +35,116 @@ async function getRuntimeState() {
 function parseNumber(value: unknown, fallback: number) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+type ResolvedLocationContext = {
+  source: "gps" | "ip" | "city" | "none";
+  latitude?: number;
+  longitude?: number;
+  city?: string;
+  region?: string;
+  country?: string;
+  timezone?: string;
+};
+
+function parseCoordinate(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function sanitizeLocationText(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized.toLowerCase() : undefined;
+}
+
+function decodeHeaderValue(value: string | string[] | undefined) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) return undefined;
+  try {
+    return decodeURIComponent(raw).trim();
+  } catch {
+    return raw.trim();
+  }
+}
+
+function extractLocationContext(request: FastifyRequest): ResolvedLocationContext {
+  const query = request.query as Record<string, string | number | undefined>;
+  const queryLat = parseCoordinate(query.lat);
+  const queryLng = parseCoordinate(query.lng);
+  const headerLat = parseCoordinate(request.headers["x-vercel-ip-latitude"]);
+  const headerLng = parseCoordinate(request.headers["x-vercel-ip-longitude"]);
+  const latitude = queryLat ?? headerLat;
+  const longitude = queryLng ?? headerLng;
+  const city = sanitizeLocationText(String(query.city ?? decodeHeaderValue(request.headers["x-vercel-ip-city"]) ?? ""));
+  const region = sanitizeLocationText(String(query.region ?? decodeHeaderValue(request.headers["x-vercel-ip-country-region"]) ?? ""));
+  const country = sanitizeLocationText(String(query.country ?? decodeHeaderValue(request.headers["x-vercel-ip-country"]) ?? ""));
+  const timezone = decodeHeaderValue(request.headers["x-vercel-ip-timezone"]);
+
+  if (latitude !== undefined && longitude !== undefined) {
+    return { source: queryLat !== undefined && queryLng !== undefined ? "gps" : "ip", latitude, longitude, city, region, country, timezone };
+  }
+
+  if (city || country) {
+    return { source: city ? "city" : "ip", city, region, country, timezone };
+  }
+
+  return { source: "none" };
+}
+
+function haversineKm(leftLat: number, leftLng: number, rightLat: number, rightLng: number) {
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const dLat = toRadians(rightLat - leftLat);
+  const dLng = toRadians(rightLng - leftLng);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(leftLat)) * Math.cos(toRadians(rightLat)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusKm * c;
+}
+
+function matchesLocationFragment(location: string, fragment?: string) {
+  if (!fragment) return false;
+  return location.toLowerCase().includes(fragment.toLowerCase());
+}
+
+function locationBoost(card: StoredCard, context: ResolvedLocationContext) {
+  let boost = 0;
+
+  if (matchesLocationFragment(card.location, context.city)) {
+    boost += 0.7;
+  }
+
+  if (matchesLocationFragment(card.location, context.region)) {
+    boost += 0.18;
+  }
+
+  if (matchesLocationFragment(card.location, context.country)) {
+    boost += 0.14;
+  }
+
+  if (context.latitude !== undefined && context.longitude !== undefined) {
+    const distanceKm = haversineKm(context.latitude, context.longitude, card.coordinates.lat, card.coordinates.lng);
+    if (distanceKm <= 15) boost += 1.15;
+    else if (distanceKm <= 50) boost += 0.95;
+    else if (distanceKm <= 150) boost += 0.72;
+    else if (distanceKm <= 500) boost += 0.48;
+    else if (distanceKm <= 1200) boost += 0.22;
+  }
+
+  return boost;
+}
+
+function rankCardsForContext(cards: StoredCard[], context: ResolvedLocationContext) {
+  const sorted = sortCards(cards);
+  if (context.source === "none") return sorted;
+
+  return [...sorted].sort((left, right) => {
+    const leftScore = (left.qualityScore ?? 0) + left.freshnessScore + left.relevanceScore + locationBoost(left, context);
+    const rightScore = (right.qualityScore ?? 0) + right.freshnessScore + right.relevanceScore + locationBoost(right, context);
+    return rightScore - leftScore;
+  });
 }
 
 function pickPlanTitle(type: AFRIKAPlan["type"]) {
@@ -294,16 +404,56 @@ app.post("/auth/logout", async (_request, reply) => {
   return { ok: true, loggedOut: true };
 });
 
+app.get("/hero", async () => {
+  const { state, runtime } = await getRuntimeState();
+  const featuredCard = state.hero.featuredCardId ? runtime.cards.find((card) => card.id === state.hero.featuredCardId) ?? null : null;
+
+  return {
+    hero: state.hero,
+    featuredCard
+  };
+});
+
+app.patch("/admin/hero", async (request, reply) => {
+  const admin = await requireAdmin(request, reply);
+  if (!admin) return reply;
+
+  const body = request.body as Partial<ApiHeroContent>;
+
+  const next = await writeState((state) => ({
+    ...state,
+    hero: {
+      ...state.hero,
+      eyebrow: body.eyebrow?.trim() || state.hero.eyebrow,
+      title: body.title?.trim() || state.hero.title,
+      description: body.description?.trim() || state.hero.description,
+      imageUrl: body.imageUrl?.trim() || state.hero.imageUrl,
+      videoUrl: body.videoUrl !== undefined ? body.videoUrl.trim() || undefined : state.hero.videoUrl,
+      alt: body.alt?.trim() || state.hero.alt,
+      locationLabel: body.locationLabel?.trim() || state.hero.locationLabel,
+      featuredCardId: body.featuredCardId !== undefined ? body.featuredCardId.trim() || undefined : state.hero.featuredCardId,
+      chips: Array.isArray(body.chips) && body.chips.length > 0 ? body.chips.map((chip) => chip.trim()).filter(Boolean).slice(0, 5) : state.hero.chips,
+      updatedAt: new Date().toISOString()
+    }
+  }));
+
+  return {
+    hero: next.hero
+  };
+});
+
 app.get("/feed", async (request) => {
   const city = String((request.query as { city?: string }).city ?? "").trim().toLowerCase();
   const limit = parseNumber((request.query as { limit?: string | number }).limit, 20);
+  const locationContext = extractLocationContext(request);
   const { state, runtime } = await getRuntimeState();
-  const items = sortCards(runtime.cards).filter((card) => (city ? card.location.toLowerCase().includes(city) : true)).slice(0, limit);
+  const items = rankCardsForContext(runtime.cards, locationContext).filter((card) => (city ? card.location.toLowerCase().includes(city) : true)).slice(0, limit);
 
   return {
     items,
     meta: {
       rankedBy: ["usefulness", "freshness", "local relevance", "trust", "visual quality"],
+      locationContext,
       freshnessBuckets: {
         fresh: items.filter((item) => item.freshnessStatus === "fresh").length,
         warming: items.filter((item) => item.freshnessStatus === "warming").length,
@@ -319,15 +469,17 @@ app.get("/cards", async (request) => {
   const search = String((request.query as { q?: string }).q ?? "").trim();
   const limit = parseNumber((request.query as { limit?: string | number }).limit, 50);
   const offset = parseNumber((request.query as { offset?: string | number }).offset, 0);
+  const locationContext = extractLocationContext(request);
   const { runtime } = await getRuntimeState();
   const filtered = filterCards(runtime.cards, search);
-  const items = sortCards(filtered).slice(offset, offset + limit);
+  const items = rankCardsForContext(filtered, locationContext).slice(offset, offset + limit);
 
   return {
     items,
     total: filtered.length,
     limit,
-    offset
+    offset,
+    locationContext
   };
 });
 
@@ -427,9 +579,10 @@ app.get("/search", async (request) => {
   const query = String((request.query as { q?: string }).q ?? "");
   const recordHistory = String((request.query as { record?: string }).record ?? "true") !== "false";
   const interpretation = interpretSearch(query);
+  const locationContext = extractLocationContext(request);
   const { runtime } = await getRuntimeState();
   const filtered = filterCards(runtime.cards, query, interpretation);
-  const items = sortCards(filtered).slice(0, 24);
+  const items = rankCardsForContext(filtered, locationContext).slice(0, 24);
   const currentUser = await resolveCurrentUser(request);
 
   if (recordHistory && query.trim().length > 0 && currentUser) {
@@ -449,6 +602,7 @@ app.get("/search", async (request) => {
     query,
     interpretation,
     items,
+    locationContext,
     summary: `Search resolved to ${items.length} intelligent discovery cards.`
   };
 });

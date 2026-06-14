@@ -9,6 +9,11 @@ export type AdminCard = {
   title: string;
   location: string;
   category: string;
+  media: {
+    imageUrl: string;
+    videoUrl?: string;
+    alt: string;
+  };
   freshnessScore: number;
   trustScore: number;
   relevanceScore: number;
