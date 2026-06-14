@@ -14,10 +14,18 @@ type MapPin = {
   summary: string;
 };
 
+type UserLocation = {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  label?: string;
+};
+
 type OsmMapProps = {
   pins: MapPin[];
   activePin: string | null;
   onPinSelect: (pinId: string | null) => void;
+  userLocation?: UserLocation | null;
 };
 
 const toneColors = {
@@ -56,15 +64,45 @@ function createPinIcon(tone: MapPin["tone"], active: boolean) {
   });
 }
 
-export function OSMMap({ pins, activePin, onPinSelect }: OsmMapProps) {
+function createUserIcon() {
+  return L.divIcon({
+    className: "",
+    html: `
+      <div style="
+        position: relative;
+        width: 18px;
+        height: 18px;
+        border-radius: 9999px;
+        background: #7AB6FF;
+        border: 2px solid rgba(255,255,255,0.95);
+        box-shadow: 0 0 26px rgba(122,182,255,0.75);
+      ">
+        <div style="
+          position: absolute;
+          inset: -12px;
+          border-radius: 9999px;
+          background: rgba(122,182,255,0.18);
+          border: 1px solid rgba(122,182,255,0.20);
+          animation: pulse-ring 3s ease-in-out infinite;
+        "></div>
+      </div>
+    `,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+    popupAnchor: [0, -9]
+  });
+}
+
+export function OSMMap({ pins, activePin, onPinSelect, userLocation }: OsmMapProps) {
   const mapNodeRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
 
   const center = useMemo<[number, number]>(() => {
+    if (userLocation) return [userLocation.latitude, userLocation.longitude];
     if (pins[0]) return [pins[0].latitude, pins[0].longitude];
     return [6.5244, 3.3792];
-  }, [pins]);
+  }, [pins, userLocation]);
 
   useEffect(() => {
     if (!mapNodeRef.current || mapRef.current) return;
@@ -73,7 +111,7 @@ export function OSMMap({ pins, activePin, onPinSelect }: OsmMapProps) {
       zoomControl: false,
       attributionControl: true,
       scrollWheelZoom: true
-    }).setView(center, 5);
+    }).setView(center, userLocation ? 10 : 5);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -89,7 +127,7 @@ export function OSMMap({ pins, activePin, onPinSelect }: OsmMapProps) {
       markersRef.current = null;
       mapRef.current = null;
     };
-  }, [center]);
+  }, [center, userLocation]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -99,6 +137,26 @@ export function OSMMap({ pins, activePin, onPinSelect }: OsmMapProps) {
     layer.clearLayers();
 
     const bounds: L.LatLngExpression[] = [];
+
+    if (userLocation) {
+      bounds.push([userLocation.latitude, userLocation.longitude]);
+      const userMarker = L.marker([userLocation.latitude, userLocation.longitude], {
+        icon: createUserIcon()
+      });
+
+      userMarker.bindPopup(
+        `
+          <div style="min-width: 170px;">
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.32em; color: #7AB6FF; margin-bottom: 6px;">Your position</div>
+            <div style="font-size: 13px; font-weight: 600; color: #F6F1E8; margin-bottom: 4px;">${userLocation.label ?? "Location signal detected"}</div>
+            <div style="font-size: 12px; line-height: 1.55; color: #CFC7BC;">Nearby recommendations are leaning toward this part of the map first.</div>
+          </div>
+        `,
+        { closeButton: false, className: "afrika-leaflet-popup" }
+      );
+
+      userMarker.addTo(layer);
+    }
 
     pins.forEach((pin) => {
       bounds.push([pin.latitude, pin.longitude]);
@@ -128,17 +186,20 @@ export function OSMMap({ pins, activePin, onPinSelect }: OsmMapProps) {
       }
     });
 
-    if (bounds.length > 0) {
+    if (bounds.length > 1) {
       const fitBounds = L.latLngBounds(bounds);
       map.fitBounds(fitBounds.pad(0.2), { animate: true, duration: 0.8 });
+    } else if (bounds.length === 1) {
+      const [lat, lng] = bounds[0] as [number, number];
+      map.setView([lat, lng], userLocation ? 12 : 10, { animate: true });
     }
-  }, [activePin, onPinSelect, pins]);
+  }, [activePin, onPinSelect, pins, userLocation]);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     requestAnimationFrame(() => map.invalidateSize());
-  }, [pins]);
+  }, [pins, userLocation]);
 
   return <div ref={mapNodeRef} className="h-full w-full" style={{ minHeight: 680 }} />;
 }

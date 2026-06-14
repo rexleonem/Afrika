@@ -6,12 +6,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { AFRIKACard } from "@afrika/shared/types";
 import { interpretSearch } from "@afrika/shared/stage2";
 import { apiFetch } from "../../lib/api";
+import { buildLocationQuery, useLocationContext } from "../../lib/location-context";
 import { DiscoveryCard, InsightRow, MetricTile, SectionHeader } from "../../components/primitives";
 import { SearchBar } from "../../components/ui/search-bar";
 import { AIInsightPanel, ContextPanel } from "../../components/panels/ai-insight-panel";
 import { AmbientGlow } from "../../components/motion/ambient-glow";
 
 type LiveCard = AFRIKACard;
+
+type SearchResponse = {
+  items: LiveCard[];
+  summary?: string;
+};
 
 const suggestions = [
   "Quiet places to work in Lagos",
@@ -26,6 +32,14 @@ export default function SearchPage() {
   const [results, setResults] = useState<LiveCard[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { effectiveLocation, geolocationStatus, requestPreciseLocation, isLocating } = useLocationContext();
+
+  const locationQuery = useMemo(() => buildLocationQuery(effectiveLocation), [effectiveLocation]);
+  const locationLabel = useMemo(() => {
+    if (!effectiveLocation) return null;
+    if (effectiveLocation.label?.trim()) return effectiveLocation.label;
+    return [effectiveLocation.city, effectiveLocation.country].filter(Boolean).join(", ") || null;
+  }, [effectiveLocation]);
 
   useEffect(() => {
     let active = true;
@@ -34,9 +48,15 @@ export default function SearchPage() {
 
     const timeout = window.setTimeout(async () => {
       try {
-        const response = await apiFetch<{ items: LiveCard[]; summary?: string }>(
-          `/search?q=${encodeURIComponent(query)}&record=${query.trim().length > 0 ? "true" : "false"}`
-        );
+        const params = new URLSearchParams();
+        params.set("q", query);
+        if (query.trim().length > 0) params.set("record", "true");
+        if (locationQuery) {
+          const locationParams = new URLSearchParams(locationQuery);
+          locationParams.forEach((value, key) => params.set(key, value));
+        }
+
+        const response = await apiFetch<SearchResponse>(`/search?${params.toString()}`);
         if (!active) return;
         setResults(response.items);
       } catch (requestError) {
@@ -52,7 +72,7 @@ export default function SearchPage() {
       active = false;
       window.clearTimeout(timeout);
     };
-  }, [query]);
+  }, [query, locationQuery]);
 
   const parsed = useMemo(() => interpretSearch(query || "quiet places to work in Lagos"), [query]);
 
@@ -68,6 +88,7 @@ export default function SearchPage() {
                 {chip}
               </span>
             ))}
+            {locationLabel ? <span className="afrika-chip">{effectiveLocation?.source === "gps" ? `Near ${locationLabel}` : `Around ${locationLabel}`}</span> : null}
           </div>
           <h1 className="afrika-hero-title text-4xl sm:text-5xl">
             Search like a question.{" "}
@@ -76,13 +97,13 @@ export default function SearchPage() {
             </span>
           </h1>
           <p className="text-base leading-7 text-white/65">
-            AFRIKA reads intent, geography, timing, and context before it ranks what deserves your attention.
+            Nommo reads intent, geography, timing, and context before it ranks what deserves your attention.
           </p>
           <SearchBar value={query} onChange={setQuery} suggestions={suggestions} onSuggestion={setQuery} />
           <AnimatePresence mode="wait">
-            {(query || loading || error) && (
+            {(query || loading || error || locationLabel) && (
               <motion.div
-                key={`${query}-${loading}-${error}`}
+                key={`${query}-${loading}-${error}-${locationLabel}`}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
@@ -91,9 +112,23 @@ export default function SearchPage() {
               >
                 <div className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80">Intent: {parsed.intent}</div>
                 {parsed.locationHint ? <div className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/65">{parsed.locationHint}</div> : null}
+                {locationLabel ? (
+                  <div className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/65">
+                    {effectiveLocation?.source === "gps" ? `Using exact location near ${locationLabel}` : `Ranking with ${locationLabel}`}
+                  </div>
+                ) : null}
                 <div className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/65">
                   {loading ? "Searching..." : `${results.length} result${results.length === 1 ? "" : "s"}`}
                 </div>
+                {geolocationStatus === "prompt" && effectiveLocation?.source !== "gps" ? (
+                  <button
+                    type="button"
+                    onClick={() => void requestPreciseLocation()}
+                    className="rounded-full border border-white/10 bg-white/10 px-3 py-2 text-xs text-white transition hover:border-white/20 hover:bg-white/15"
+                  >
+                    {isLocating ? "Finding your exact spot..." : "Use exact location"}
+                  </button>
+                ) : null}
               </motion.div>
             )}
           </AnimatePresence>
@@ -106,7 +141,11 @@ export default function SearchPage() {
             <SectionHeader
               eyebrow={query ? `Results for "${query}"` : "Discover"}
               title={query ? "Grouped intelligence, not a flat list." : "All discoveries, curated by intelligence."}
-              description="Each result blends visual context, why-it-matters reasoning, and action paths."
+              description={
+                locationLabel
+                  ? `Each result blends visual context, local relevance, and why-it-matters reasoning around ${locationLabel}.`
+                  : "Each result blends visual context, why-it-matters reasoning, and action paths."
+              }
             />
 
             {error ? (
@@ -141,7 +180,10 @@ export default function SearchPage() {
           <ContextPanel className="xl:sticky xl:top-6 xl:h-fit">
             <AIInsightPanel title="Nommo reading">
               <p className="text-xs leading-5 text-white/65">
-                {parsed.rankingHint} Search results are now coming from the live backend rather than a local fallback array.
+                {parsed.rankingHint}{" "}
+                {locationLabel
+                  ? `Results are leaning toward ${locationLabel} before widening out.`
+                  : "Results are coming from the live backend rather than a local fallback array."}
               </p>
             </AIInsightPanel>
 

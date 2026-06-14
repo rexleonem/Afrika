@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AmbientGlow } from "../../../components/motion/ambient-glow";
 import { ScrollReveal } from "../../../components/motion/scroll-reveal";
 import { SectionHeader } from "../../../components/primitives";
+import { serverApiFetch } from "../../../lib/server-api";
 
 type CreatorPageProps = {
   params: Promise<{ id: string }>;
@@ -40,18 +41,22 @@ type CreatorResponse = {
   }>;
 };
 
-const apiOrigin =
-  process.env.API_PUBLIC_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "https://afrika.techculture.live";
-
 export default async function CreatorPage({ params }: CreatorPageProps) {
   const { id } = await params;
-  const response = await fetch(`${apiOrigin.replace(/\/$/, "")}/creators/${id}`, { cache: "no-store" });
-  if (response.status === 404) notFound();
-  if (!response.ok) throw new Error("Unable to load creator.");
+  let creator: CreatorResponse | null = null;
 
-  const creator = (await response.json()) as CreatorResponse;
+  try {
+    creator = await serverApiFetch<CreatorResponse>(`/creators/${id}`);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("404")) {
+      notFound();
+    }
+    throw error;
+  }
+
+  if (!creator) {
+    notFound();
+  }
 
   return (
     <main className="pb-24 lg:pb-12">

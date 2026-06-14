@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import type { AFRIKACard } from "@afrika/shared/types";
 import { buildAmbientIntelligence, buildTemporalIntelligence } from "@afrika/shared/stage6";
+import { buildLocationQuery, useLocationContext } from "../../lib/location-context";
 import { InsightRow, MetricTile, SectionHeader } from "../../components/primitives";
 import { AIInsightPanel, ContextPanel } from "../../components/panels/ai-insight-panel";
 import { AmbientGlow } from "../../components/motion/ambient-glow";
@@ -43,6 +44,14 @@ export default function MapPage() {
   const [error, setError] = useState<string | null>(null);
   const [activePin, setActivePin] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<(typeof FILTERS)[number]>("All");
+  const { effectiveLocation, geolocationStatus, requestPreciseLocation, isLocating } = useLocationContext();
+
+  const locationQuery = useMemo(() => buildLocationQuery(effectiveLocation), [effectiveLocation]);
+  const locationLabel = useMemo(() => {
+    if (!effectiveLocation) return null;
+    if (effectiveLocation.label?.trim()) return effectiveLocation.label;
+    return [effectiveLocation.city, effectiveLocation.country].filter(Boolean).join(", ") || null;
+  }, [effectiveLocation]);
 
   useEffect(() => {
     let active = true;
@@ -51,7 +60,8 @@ export default function MapPage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await apiFetch<FeedResponse>("/cards?limit=60");
+        const query = locationQuery ? `/cards?limit=24&${locationQuery}` : "/cards?limit=24";
+        const response = await apiFetch<FeedResponse>(query);
         if (!active) return;
         setCards(response.items);
       } catch (err) {
@@ -67,7 +77,7 @@ export default function MapPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [locationQuery]);
 
   const ambient = useMemo(() => (cards.length ? buildAmbientIntelligence(cards, new Date().toISOString()) : null), [cards]);
   const temporal = useMemo(() => (cards.length ? buildTemporalIntelligence(cards, new Date().toISOString()) : []), [cards]);
@@ -94,6 +104,17 @@ export default function MapPage() {
     return pins.filter((pin) => [pin.title, pin.location, pin.kind, pin.category].join(" ").toLowerCase().includes(query));
   }, [activeFilter, pins]);
 
+  useEffect(() => {
+    if (visiblePins.length === 0) {
+      setActivePin(null);
+      return;
+    }
+
+    if (!activePin || !visiblePins.some((pin) => pin.id === activePin)) {
+      setActivePin(visiblePins[0]!.id);
+    }
+  }, [activePin, visiblePins]);
+
   const activePinCard = visiblePins.find((pin) => pin.id === activePin) ?? null;
   const activeToneColor =
     activePinCard?.tone === "forest"
@@ -101,6 +122,19 @@ export default function MapPage() {
       : activePinCard?.tone === "clay"
         ? "var(--accent-clay)"
         : "var(--accent-gold)";
+
+  const userLocation = useMemo(
+    () =>
+      effectiveLocation?.latitude !== undefined && effectiveLocation?.longitude !== undefined
+        ? {
+            latitude: effectiveLocation.latitude,
+            longitude: effectiveLocation.longitude,
+            accuracy: effectiveLocation.accuracy,
+            label: locationLabel ?? undefined
+          }
+        : null,
+    [effectiveLocation?.accuracy, effectiveLocation?.latitude, effectiveLocation?.longitude, locationLabel]
+  );
 
   return (
     <main className="min-h-screen pb-24 lg:pb-12">
@@ -120,6 +154,7 @@ export default function MapPage() {
                   {chip}
                 </span>
               ))}
+              {locationLabel ? <span className="afrika-chip">{effectiveLocation?.source === "gps" ? `Near ${locationLabel}` : `Around ${locationLabel}`}</span> : null}
             </div>
 
             <h1
@@ -130,16 +165,33 @@ export default function MapPage() {
             </h1>
 
             <p className="max-w-2xl text-sm leading-7" style={{ color: "var(--text-secondary)" }}>
-              The map now runs on OpenStreetMap and the live AFRIKA card graph, so the spatial layer is reading the same places, timing, and context as the rest of the product.
+              The map runs on OpenStreetMap and the live AFRIKA card graph, with local ranking leaning first toward the places closest to you.
             </p>
 
+            <div className="flex flex-wrap gap-3 text-xs text-white/70">
+              {locationLabel ? (
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">
+                  {effectiveLocation?.source === "gps" ? `Using your exact position near ${locationLabel}` : `Positioned around ${locationLabel}`}
+                </span>
+              ) : null}
+              {geolocationStatus === "prompt" && effectiveLocation?.source !== "gps" ? (
+                <button
+                  type="button"
+                  onClick={() => void requestPreciseLocation()}
+                  className="rounded-full border border-white/10 bg-white/10 px-3 py-2 text-white transition hover:border-white/20 hover:bg-white/15"
+                >
+                  {isLocating ? "Finding your exact spot..." : "Use exact location"}
+                </button>
+              ) : null}
+            </div>
+
             <div className="mt-6 grid max-w-lg grid-cols-3 gap-3">
-              <MetricTile label="Visible pins" value={`${visiblePins.length}`} detail="Live discovery points." />
+              <MetricTile label="Visible pins" value={`${visiblePins.length}`} detail="Local-first discovery points." />
               <MetricTile label="Cities in pulse" value={`${ambient?.cityPulse.length ?? 0}`} detail="Tracked by timing and movement." />
               <MetricTile
                 label="Environment"
                 value={ambient?.environmentalSignals[0]?.weather ?? "Loading"}
-                detail={`${ambient?.environmentalSignals[0]?.traffic ?? "..." } traffic`}
+                detail={`${ambient?.environmentalSignals[0]?.traffic ?? "..."} traffic`}
               />
             </div>
           </motion.div>
@@ -170,7 +222,7 @@ export default function MapPage() {
             {error ? <div className="afrika-panel mb-4 border-red-500/20 bg-red-500/5 p-6 text-sm text-red-100">{error}</div> : null}
 
             <div className="relative overflow-hidden rounded-[28px]" style={{ minHeight: 680, border: "1px solid var(--border-default)", boxShadow: "var(--shadow-card)" }}>
-              <OSMMap pins={visiblePins} activePin={activePin} onPinSelect={setActivePin} />
+              <OSMMap pins={visiblePins} activePin={activePin} onPinSelect={setActivePin} userLocation={userLocation} />
 
               <div
                 className="absolute left-5 top-5 z-[500] rounded-full px-3 py-2 text-[10px] uppercase tracking-[0.38em]"
@@ -214,9 +266,9 @@ export default function MapPage() {
             {ambient ? (
               <AIInsightPanel title="Conditions on the ground" live>
                 <div className="space-y-2">
-                  <InsightRow title="Weather" detail={`${ambient.environmentalSignals[0]?.weather ?? "Clear"} — good for low-friction exploring.`} />
-                  <InsightRow title="Traffic" detail={`${ambient.environmentalSignals[0]?.traffic ?? "Low"} — route timing stays manageable.`} />
-                  <InsightRow title="Crowd feel" detail={`${ambient.environmentalSignals[0]?.crowdDensity ?? "Moderate"} — intensity updates through the day.`} />
+                  <InsightRow title="Weather" detail={`${ambient.environmentalSignals[0]?.weather ?? "Clear"} - good for low-friction exploring.`} />
+                  <InsightRow title="Traffic" detail={`${ambient.environmentalSignals[0]?.traffic ?? "Low"} - route timing stays manageable.`} />
+                  <InsightRow title="Crowd feel" detail={`${ambient.environmentalSignals[0]?.crowdDensity ?? "Moderate"} - intensity updates through the day.`} />
                 </div>
               </AIInsightPanel>
             ) : null}
